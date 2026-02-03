@@ -1,0 +1,16 @@
+# Configuration files with passwords
+config.php
+DB_connection.php
+
+# Database files
+*.sql
+db/
+db_backups/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

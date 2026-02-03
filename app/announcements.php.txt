@@ -1,0 +1,11 @@
+<?php
+session_start();
+echo "DEBUG - Announcements Page:<br>";
+echo "Session ID: " . session_id() . "<br>";
+echo "Employee ID in session: " . ($_SESSION['employee_id'] ?? 'NOT SET') . "<br>";
+echo "Role in session: " . ($_SESSION['role'] ?? 'NOT SET') . "<br>";
+exit();
+?>
+
+
+

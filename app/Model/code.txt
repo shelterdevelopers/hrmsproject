@@ -1,0 +1,131 @@
+<?php 
+session_start();
+if (isset($_SESSION['role']) && isset($_SESSION['id']) && $_SESSION['role'] == "admin") {
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add User</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <input type="checkbox" id="checkbox">
+    <?php include "inc/header.php"; ?>
+    <div class="body">
+        <?php include "inc/nav.php"; ?>
+        <section class="section-1">
+            <h4 class="title">Add Users </h4>
+            <form class="form-1" method="POST" action="app/add-user.php">
+                <?php if (isset($_GET['error'])) { ?>
+                    <div class="danger" role="alert">
+                        <?php echo stripcslashes($_GET['error']); ?>
+                    </div>
+                <?php } ?>
+
+                <?php if (isset($_GET['success'])) { ?>
+                    <div class="success" role="alert">
+                        <?php echo stripcslashes($_GET['success']); ?>
+                    </div>
+                <?php } ?>
+
+                <div class="input-holder">
+                    <label>First Name</label>
+                    <input type="text" name="first_name" class="input-1" placeholder="First Name" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Last Name</label>
+                    <input type="text" name="last_name" class="input-1" placeholder="Last Name" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Username</label>
+                    <input type="text" name="user_name" class="input-1" placeholder="Username" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Password</label>
+                    <input type="password" name="password" class="input-1" placeholder="Password" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Email Address</label>
+                    <input type="email" name="email_address" class="input-1" placeholder="Email Address" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone_number" class="input-1" placeholder="Phone Number" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Address</label>
+                    <input type="text" name="address" class="input-1" placeholder="Address" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Emergency Contact Name</label>
+                    <input type="text" name="emergency_contact_name" class="input-1" placeholder="Emergency Contact Name" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Emergency Contact Number</label>
+                    <input type="text" name="emergency_contact_number" class="input-1" placeholder="Emergency Contact Number" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Date of Birth</label>
+                    <input type="date" name="date_of_birth" class="input-1" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Gender</label>
+                    <select name="gender" class="input-1" required>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select><br>
+                </div>
+                <div class="input-holder">
+                    <label>Job Title</label>
+                    <input type="text" name="job_title" class="input-1" placeholder="Job Title" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Department</label>
+                    <input type="text" name="department" class="input-1" placeholder="Department" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Manager ID</label>
+                    <input type="text" name="manager_id" class="input-1" placeholder="Manager ID" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Date of Hire</label>
+                    <input type="date" name="date_of_hire" class="input-1" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Employment Type</label>
+                    <input type="text" name="employment_type" class="input-1" placeholder="Employment Type" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Status</label>
+                    <input type="text" name="status" class="input-1" placeholder="Status" required><br>
+                </div>
+                <div class="input-holder">
+                    <label>Work Location</label>
+                    <input type="text" name="work_location" class="input-1" placeholder="Work Location" required><br>
+                </div>
+
+                <button type="submit" class="edit-btn" style="background: #2596be; color: #ffffff; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; transition: background 0.3s;">
+                    Add User
+                </button>
+                <a href="user.php">Go Back to Users</a>
+            </form>
+        </section>
+    </div>
+
+    <script type="text/javascript">
+        var active = document.querySelector("#navList li:nth-child(2)");
+        active.classList.add("active");
+    </script>
+</body>
+</html>
+<?php 
+} else { 
+    $em = "First login";
+    header("Location: login.php?error=$em");
+    exit();
+}
+?>

@@ -1,0 +1,190 @@
+/* Shelter Zimbabwe Color Palette */
+:root {
+    --shelter-dark-blue: #1e3a5f;
+    --shelter-light-blue: #4a90c2;
+    --shelter-light-blue-bright: #6ba8d4;
+    --shelter-dark-gray: #4a4a4a;
+    --shelter-light-gray: #e8e8e8;
+    --shelter-black: #1a1a1a;
+    --shelter-white: #ffffff;
+}
+
+.login-body {
+    background: var(--shelter-white);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.login-body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../img/shelter_logo.png');
+    background-size: 70%;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    opacity: 0.4;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.login-body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.3);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.welcome-banner {
+    text-align: center;
+    margin: 0;
+    padding: 20px 24px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, var(--shelter-light-blue) 0%, var(--shelter-dark-blue) 100%);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    box-shadow: 0 2px 14px rgba(30, 58, 95, 0.25);
+    overflow: visible;
+}
+
+.welcome-banner h1 {
+    font-size: clamp(20px, 4vw, 36px);
+    font-weight: 700;
+    color: var(--shelter-white);
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.login-container {
+    max-width: 500px;
+    margin: 120px auto 40px auto;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(74, 144, 194, 0.3);
+    border: 3px solid var(--shelter-light-blue);
+    position: relative;
+    z-index: 1;
+    overflow: visible;
+}
+
+.login-container form {
+    overflow: visible;
+}
+
+.login-container h3,
+.login-container .form-label,
+.login-container label,
+.login-container p {
+    color: var(--black) !important;
+}
+
+.login-container .form-control {
+    background: var(--white) !important;
+    color: var(--black) !important;
+    border: 1px solid var(--grey) !important;
+}
+
+.login-container .form-control::placeholder {
+    color: var(--grey) !important;
+}
+
+.login-container .btn-primary {
+    background: var(--shelter-light-blue) !important;
+    color: var(--shelter-white) !important;
+    border-color: var(--shelter-light-blue) !important;
+    font-weight: 600;
+    padding: 12px;
+    transition: all 0.3s;
+}
+
+.login-container .btn-primary:hover {
+    background: var(--shelter-light-blue-bright) !important;
+    border-color: var(--shelter-light-blue-bright) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 194, 0.4);
+}
+
+.login-container .alert {
+    color: var(--black) !important;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow: visible;
+    min-height: auto;
+    padding: 12px 16px;
+}
+
+.login-container .alert-danger {
+    background-color: #f8d7da !important;
+    border-color: #f5c2c7 !important;
+    color: #842029 !important;
+}
+
+.login-container .alert-success {
+    background-color: #d1e7dd !important;
+    border-color: #badbcc !important;
+    color: #0f5132 !important;
+}
+
+.signup-link {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.signup-link a {
+    color: var(--shelter-light-blue) !important;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+    color: var(--shelter-light-blue-bright) !important;
+}
+
+.login-container h3 {
+    color: var(--shelter-light-blue) !important;
+    font-weight: 700;
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+.login-container .form-label {
+    color: var(--shelter-dark-gray) !important;
+    font-weight: 600;
+}
+
+.login-container .form-control:focus {
+    border-color: var(--shelter-light-blue) !important;
+    box-shadow: 0 0 0 3px rgba(74, 144, 194, 0.2) !important;
+}
+
+.signup-link p {
+    color: var(--black) !important;
+}
+
+@media (min-width: 992px) {
+    .login-container {
+        margin-right: 80px;
+        margin-left: auto;
+    }
+}

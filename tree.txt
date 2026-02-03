@@ -1,0 +1,471 @@
+Folder PATH listing
+Volume serial number is 6A4D-3D13
+C:.
+¦   acknowledge-task.php
+¦   add-user.php
+¦   company_info.php
+¦   composer.json
+¦   composer.lock
+¦   create_task.php
+¦   css23.txt
+¦   DB.sql
+¦   DB_connection.php
+¦   delete-task.php
+¦   delete-user.php
+¦   Dockerfile
+¦   edit-task-employee.php
+¦   edit-task.php
+¦   edit-user.php
+¦   edit_profile.php
+¦   index.php
+¦   login.php
+¦   logout.php
+¦   my_task.php
+¦   notifications.php
+¦   notify_all_form.php
+¦   pending-employees.php
+¦   profile.php
+¦   rate-task.php
+¦   README.md
+¦   signup.php
+¦   tasks.php
+¦   task_management_db.sql
+¦   tree.txt
+¦   update_enrollment_status.php
+¦   user.php
+¦   
++---.vscode
+¦       launch.json
+¦       settings.json
+¦       
++---app
+¦   ¦   add-task.php
+¦   ¦   add-user.php
+¦   ¦   admin_verify_payment.php
+¦   ¦   applications.php
+¦   ¦   attendance.php
+¦   ¦   course_stats.php
+¦   ¦   course_stats_view.php
+¦   ¦   documents.php
+¦   ¦   edit_course.php
+¦   ¦   generate_payroll_report.php
+¦   ¦   get_course_details.php
+¦   ¦   learning.php
+¦   ¦   learning_admin.php
+¦   ¦   login.php
+¦   ¦   notification-count.php
+¦   ¦   notification-read.php
+¦   ¦   notification.php
+¦   ¦   notify_all.php
+¦   ¦   payroll.php
+¦   ¦   process_feedback.php
+¦   ¦   process_quiz.php
+¦   ¦   rate-tasks.php
+¦   ¦   record_repayment.php
+¦   ¦   toggle_course.php
+¦   ¦   update-employee-profile.php
+¦   ¦   update-profile-picture.php
+¦   ¦   update-profile.php
+¦   ¦   update-task-employee.php
+¦   ¦   update-task-rating.php
+¦   ¦   update-task-status.php
+¦   ¦   update-task.php
+¦   ¦   update-user.php
+¦   ¦   update_application.php
+¦   ¦   verify_completion.php
+¦   ¦   verify_repayment.php
+¦   ¦   
+¦   +---Model
+¦   ¦       Attendance.php
+¦   ¦       AzureStorage.php
+¦   ¦       code.txt
+¦   ¦       Learning.php
+¦   ¦       LearningAdmin.php
+¦   ¦       Notification.php
+¦   ¦       Task.php
+¦   ¦       User.php
+¦   ¦       
+¦   +---views
+¦           admin_payments_view.php
+¦           applications_view.php
+¦           attendance_view.php
+¦           edit_course_view.php
+¦           learning_admin_view.php
+¦           learning_view.php
+¦           
++---css
+¦       admin.css
+¦       attendance.css
+¦       learning.css
+¦       payroll.css
+¦       style.css
+¦       
++---img
+¦       user.png
+¦       user10.png
+¦       user12.png
+¦       
++---inc
+¦       header.php
+¦       nav.php
+¦       
++---vendor
+    ¦   autoload.php
+    ¦   
+    +---composer
+    ¦       autoload_classmap.php
+    ¦       autoload_files.php
+    ¦       autoload_namespaces.php
+    ¦       autoload_psr4.php
+    ¦       autoload_real.php
+    ¦       autoload_static.php
+    ¦       ClassLoader.php
+    ¦       installed.json
+    ¦       installed.php
+    ¦       InstalledVersions.php
+    ¦       LICENSE
+    ¦       
+    +---guzzlehttp
+    ¦   +---guzzle
+    ¦   ¦   ¦   CHANGELOG.md
+    ¦   ¦   ¦   composer.json
+    ¦   ¦   ¦   LICENSE
+    ¦   ¦   ¦   README.md
+    ¦   ¦   ¦   UPGRADING.md
+    ¦   ¦   ¦   
+    ¦   ¦   +---src
+    ¦   ¦       ¦   BodySummarizer.php
+    ¦   ¦       ¦   BodySummarizerInterface.php
+    ¦   ¦       ¦   Client.php
+    ¦   ¦       ¦   ClientInterface.php
+    ¦   ¦       ¦   ClientTrait.php
+    ¦   ¦       ¦   functions.php
+    ¦   ¦       ¦   functions_include.php
+    ¦   ¦       ¦   HandlerStack.php
+    ¦   ¦       ¦   MessageFormatter.php
+    ¦   ¦       ¦   MessageFormatterInterface.php
+    ¦   ¦       ¦   Middleware.php
+    ¦   ¦       ¦   Pool.php
+    ¦   ¦       ¦   PrepareBodyMiddleware.php
+    ¦   ¦       ¦   RedirectMiddleware.php
+    ¦   ¦       ¦   RequestOptions.php
+    ¦   ¦       ¦   RetryMiddleware.php
+    ¦   ¦       ¦   TransferStats.php
+    ¦   ¦       ¦   Utils.php
+    ¦   ¦       ¦   
+    ¦   ¦       +---Cookie
+    ¦   ¦       ¦       CookieJar.php
+    ¦   ¦       ¦       CookieJarInterface.php
+    ¦   ¦       ¦       FileCookieJar.php
+    ¦   ¦       ¦       SessionCookieJar.php
+    ¦   ¦       ¦       SetCookie.php
+    ¦   ¦       ¦       
+    ¦   ¦       +---Exception
+    ¦   ¦       ¦       BadResponseException.php
+    ¦   ¦       ¦       ClientException.php
+    ¦   ¦       ¦       ConnectException.php
+    ¦   ¦       ¦       GuzzleException.php
+    ¦   ¦       ¦       InvalidArgumentException.php
+    ¦   ¦       ¦       RequestException.php
+    ¦   ¦       ¦       ServerException.php
+    ¦   ¦       ¦       TooManyRedirectsException.php
+    ¦   ¦       ¦       TransferException.php
+    ¦   ¦       ¦       
+    ¦   ¦       +---Handler
+    ¦   ¦               CurlFactory.php
+    ¦   ¦               CurlFactoryInterface.php
+    ¦   ¦               CurlHandler.php
+    ¦   ¦               CurlMultiHandler.php
+    ¦   ¦               EasyHandle.php
+    ¦   ¦               HeaderProcessor.php
+    ¦   ¦               MockHandler.php
+    ¦   ¦               Proxy.php
+    ¦   ¦               StreamHandler.php
+    ¦   ¦               
+    ¦   +---promises
+    ¦   ¦   ¦   CHANGELOG.md
+    ¦   ¦   ¦   composer.json
+    ¦   ¦   ¦   LICENSE
+    ¦   ¦   ¦   README.md
+    ¦   ¦   ¦   
+    ¦   ¦   +---src
+    ¦   ¦           AggregateException.php
+    ¦   ¦           CancellationException.php
+    ¦   ¦           Coroutine.php
+    ¦   ¦           Create.php
+    ¦   ¦           Each.php
+    ¦   ¦           EachPromise.php
+    ¦   ¦           FulfilledPromise.php
+    ¦   ¦           Is.php
+    ¦   ¦           Promise.php
+    ¦   ¦           PromiseInterface.php
+    ¦   ¦           PromisorInterface.php
+    ¦   ¦           RejectedPromise.php
+    ¦   ¦           RejectionException.php
+    ¦   ¦           TaskQueue.php
+    ¦   ¦           TaskQueueInterface.php
+    ¦   ¦           Utils.php
+    ¦   ¦           
+    ¦   +---psr7
+    ¦       ¦   CHANGELOG.md
+    ¦       ¦   composer.json
+    ¦       ¦   LICENSE
+    ¦       ¦   README.md
+    ¦       ¦   
+    ¦       +---src
+    ¦           ¦   AppendStream.php
+    ¦           ¦   BufferStream.php
+    ¦           ¦   CachingStream.php
+    ¦           ¦   DroppingStream.php
+    ¦           ¦   FnStream.php
+    ¦           ¦   Header.php
+    ¦           ¦   HttpFactory.php
+    ¦           ¦   InflateStream.php
+    ¦           ¦   LazyOpenStream.php
+    ¦           ¦   LimitStream.php
+    ¦           ¦   Message.php
+    ¦           ¦   MessageTrait.php
+    ¦           ¦   MimeType.php
+    ¦           ¦   MultipartStream.php
+    ¦           ¦   NoSeekStream.php
+    ¦           ¦   PumpStream.php
+    ¦           ¦   Query.php
+    ¦           ¦   Request.php
+    ¦           ¦   Response.php
+    ¦           ¦   Rfc7230.php
+    ¦           ¦   ServerRequest.php
+    ¦           ¦   Stream.php
+    ¦           ¦   StreamDecoratorTrait.php
+    ¦           ¦   StreamWrapper.php
+    ¦           ¦   UploadedFile.php
+    ¦           ¦   Uri.php
+    ¦           ¦   UriComparator.php
+    ¦           ¦   UriNormalizer.php
+    ¦           ¦   UriResolver.php
+    ¦           ¦   Utils.php
+    ¦           ¦   
+    ¦           +---Exception
+    ¦                   MalformedUriException.php
+    ¦                   
+    +---microsoft
+    ¦   +---azure-storage-blob
+    ¦   ¦   ¦   BreakingChanges.md
+    ¦   ¦   ¦   ChangeLog.md
+    ¦   ¦   ¦   composer.json
+    ¦   ¦   ¦   CONTRIBUTING.md
+    ¦   ¦   ¦   LICENSE
+    ¦   ¦   ¦   README.md
+    ¦   ¦   ¦   
+    ¦   ¦   +---src
+    ¦   ¦       +---Blob
+    ¦   ¦           ¦   BlobRestProxy.php
+    ¦   ¦           ¦   BlobSharedAccessSignatureHelper.php
+    ¦   ¦           ¦   
+    ¦   ¦           +---Internal
+    ¦   ¦           ¦       BlobResources.php
+    ¦   ¦           ¦       IBlob.php
+    ¦   ¦           ¦       
+    ¦   ¦           +---Models
+    ¦   ¦                   AccessCondition.php
+    ¦   ¦                   AccessTierTrait.php
+    ¦   ¦                   AppendBlockOptions.php
+    ¦   ¦                   AppendBlockResult.php
+    ¦   ¦                   Blob.php
+    ¦   ¦                   BlobAccessPolicy.php
+    ¦   ¦                   BlobBlockType.php
+    ¦   ¦                   BlobPrefix.php
+    ¦   ¦                   BlobProperties.php
+    ¦   ¦                   BlobServiceOptions.php
+    ¦   ¦                   BlobType.php
+    ¦   ¦                   Block.php
+    ¦   ¦                   BlockList.php
+    ¦   ¦                   BreakLeaseResult.php
+    ¦   ¦                   CommitBlobBlocksOptions.php
+    ¦   ¦                   Container.php
+    ¦   ¦                   ContainerAccessPolicy.php
+    ¦   ¦                   ContainerACL.php
+    ¦   ¦                   ContainerProperties.php
+    ¦   ¦                   CopyBlobFromURLOptions.php
+    ¦   ¦                   CopyBlobOptions.php
+    ¦   ¦                   CopyBlobResult.php
+    ¦   ¦                   CopyState.php
+    ¦   ¦                   CreateBlobBlockOptions.php
+    ¦   ¦                   CreateBlobOptions.php
+    ¦   ¦                   CreateBlobPagesOptions.php
+    ¦   ¦                   CreateBlobPagesResult.php
+    ¦   ¦                   CreateBlobSnapshotOptions.php
+    ¦   ¦                   CreateBlobSnapshotResult.php
+    ¦   ¦                   CreateBlockBlobOptions.php
+    ¦   ¦                   CreateContainerOptions.php
+    ¦   ¦                   CreatePageBlobFromContentOptions.php
+    ¦   ¦                   CreatePageBlobOptions.php
+    ¦   ¦                   DeleteBlobOptions.php
+    ¦   ¦                   GetBlobMetadataOptions.php
+    ¦   ¦                   GetBlobMetadataResult.php
+    ¦   ¦                   GetBlobOptions.php
+    ¦   ¦                   GetBlobPropertiesOptions.php
+    ¦   ¦                   GetBlobPropertiesResult.php
+    ¦   ¦                   GetBlobResult.php
+    ¦   ¦                   GetContainerACLResult.php
+    ¦   ¦                   GetContainerPropertiesResult.php
+    ¦   ¦                   LeaseMode.php
+    ¦   ¦                   LeaseResult.php
+    ¦   ¦                   ListBlobBlocksOptions.php
+    ¦   ¦                   ListBlobBlocksResult.php
+    ¦   ¦                   ListBlobsOptions.php
+    ¦   ¦                   ListBlobsResult.php
+    ¦   ¦                   ListContainersOptions.php
+    ¦   ¦                   ListContainersResult.php
+    ¦   ¦                   ListPageBlobRangesDiffResult.php
+    ¦   ¦                   ListPageBlobRangesOptions.php
+    ¦   ¦                   ListPageBlobRangesResult.php
+    ¦   ¦                   PageWriteOption.php
+    ¦   ¦                   PublicAccessType.php
+    ¦   ¦                   PutBlobResult.php
+    ¦   ¦                   PutBlockResult.php
+    ¦   ¦                   SetBlobMetadataResult.php
+    ¦   ¦                   SetBlobPropertiesOptions.php
+    ¦   ¦                   SetBlobPropertiesResult.php
+    ¦   ¦                   SetBlobTierOptions.php
+    ¦   ¦                   UndeleteBlobOptions.php
+    ¦   ¦                   
+    ¦   +---azure-storage-common
+    ¦       ¦   BreakingChanges.md
+    ¦       ¦   ChangeLog.md
+    ¦       ¦   composer.json
+    ¦       ¦   CONTRIBUTING.md
+    ¦       ¦   LICENSE
+    ¦       ¦   README.md
+    ¦       ¦   
+    ¦       +---src
+    ¦           +---Common
+    ¦               ¦   CloudConfigurationManager.php
+    ¦               ¦   LocationMode.php
+    ¦               ¦   Logger.php
+    ¦               ¦   MarkerContinuationTokenTrait.php
+    ¦               ¦   SharedAccessSignatureHelper.php
+    ¦               ¦   
+    ¦               +---Exceptions
+    ¦               ¦       InvalidArgumentTypeException.php
+    ¦               ¦       ServiceException.php
+    ¦               ¦       
+    ¦               +---Internal
+    ¦               ¦   ¦   ACLBase.php
+    ¦               ¦   ¦   ConnectionStringParser.php
+    ¦               ¦   ¦   ConnectionStringSource.php
+    ¦               ¦   ¦   MetadataTrait.php
+    ¦               ¦   ¦   Resources.php
+    ¦               ¦   ¦   RestProxy.php
+    ¦               ¦   ¦   ServiceRestProxy.php
+    ¦               ¦   ¦   ServiceRestTrait.php
+    ¦               ¦   ¦   ServiceSettings.php
+    ¦               ¦   ¦   StorageServiceSettings.php
+    ¦               ¦   ¦   Utilities.php
+    ¦               ¦   ¦   Validate.php
+    ¦               ¦   ¦   
+    ¦               ¦   +---Authentication
+    ¦               ¦   ¦       IAuthScheme.php
+    ¦               ¦   ¦       SharedAccessSignatureAuthScheme.php
+    ¦               ¦   ¦       SharedKeyAuthScheme.php
+    ¦               ¦   ¦       TokenAuthScheme.php
+    ¦               ¦   ¦       
+    ¦               ¦   +---Http
+    ¦               ¦   ¦       HttpCallContext.php
+    ¦               ¦   ¦       HttpFormatter.php
+    ¦               ¦   ¦       
+    ¦               ¦   +---Middlewares
+    ¦               ¦   ¦       CommonRequestMiddleware.php
+    ¦               ¦   ¦       
+    ¦               ¦   +---Serialization
+    ¦               ¦           ISerializer.php
+    ¦               ¦           JsonSerializer.php
+    ¦               ¦           MessageSerializer.php
+    ¦               ¦           XmlSerializer.php
+    ¦               ¦           
+    ¦               +---Middlewares
+    ¦               ¦       HistoryMiddleware.php
+    ¦               ¦       IMiddleware.php
+    ¦               ¦       MiddlewareBase.php
+    ¦               ¦       MiddlewareStack.php
+    ¦               ¦       RetryMiddleware.php
+    ¦               ¦       RetryMiddlewareFactory.php
+    ¦               ¦       
+    ¦               +---Models
+    ¦                       AccessPolicy.php
+    ¦                       ContinuationToken.php
+    ¦                       CORS.php
+    ¦                       GetServicePropertiesResult.php
+    ¦                       GetServiceStatsResult.php
+    ¦                       Logging.php
+    ¦                       MarkerContinuationToken.php
+    ¦                       Metrics.php
+    ¦                       Range.php
+    ¦                       RangeDiff.php
+    ¦                       RetentionPolicy.php
+    ¦                       ServiceOptions.php
+    ¦                       ServiceProperties.php
+    ¦                       SignedIdentifier.php
+    ¦                       TransactionalMD5Trait.php
+    ¦                       
+    +---psr
+    ¦   +---http-client
+    ¦   ¦   ¦   CHANGELOG.md
+    ¦   ¦   ¦   composer.json
+    ¦   ¦   ¦   LICENSE
+    ¦   ¦   ¦   README.md
+    ¦   ¦   ¦   
+    ¦   ¦   +---src
+    ¦   ¦           ClientExceptionInterface.php
+    ¦   ¦           ClientInterface.php
+    ¦   ¦           NetworkExceptionInterface.php
+    ¦   ¦           RequestExceptionInterface.php
+    ¦   ¦           
+    ¦   +---http-factory
+    ¦   ¦   ¦   composer.json
+    ¦   ¦   ¦   LICENSE
+    ¦   ¦   ¦   README.md
+    ¦   ¦   ¦   
+    ¦   ¦   +---src
+    ¦   ¦           RequestFactoryInterface.php
+    ¦   ¦           ResponseFactoryInterface.php
+    ¦   ¦           ServerRequestFactoryInterface.php
+    ¦   ¦           StreamFactoryInterface.php
+    ¦   ¦           UploadedFileFactoryInterface.php
+    ¦   ¦           UriFactoryInterface.php
+    ¦   ¦           
+    ¦   +---http-message
+    ¦       ¦   CHANGELOG.md
+    ¦       ¦   composer.json
+    ¦       ¦   LICENSE
+    ¦       ¦   README.md
+    ¦       ¦   
+    ¦       +---docs
+    ¦       ¦       PSR7-Interfaces.md
+    ¦       ¦       PSR7-Usage.md
+    ¦       ¦       
+    ¦       +---src
+    ¦               MessageInterface.php
+    ¦               RequestInterface.php
+    ¦               ResponseInterface.php
+    ¦               ServerRequestInterface.php
+    ¦               StreamInterface.php
+    ¦               UploadedFileInterface.php
+    ¦               UriInterface.php
+    ¦               
+    +---ralouphie
+    ¦   +---getallheaders
+    ¦       ¦   composer.json
+    ¦       ¦   LICENSE
+    ¦       ¦   README.md
+    ¦       ¦   
+    ¦       +---src
+    ¦               getallheaders.php
+    ¦               
+    +---symfony
+        +---deprecation-contracts
+                CHANGELOG.md
+                composer.json
+                function.php
+                LICENSE
+                README.md
+                

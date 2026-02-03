@@ -1,0 +1,228 @@
+/* Admin Learning Management Styles */
+.admin-tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: #127b8e;
+    border-bottom: 3px solid #127b8e;
+    font-weight: 600;
+}
+
+.tab-btn:hover {
+    background: #f8f9fa;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.course-status {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.course-status.active {
+    background: rgba(18, 123, 142, 0.2);
+    color: #127b8e;
+}
+
+.course-status.inactive {
+    background: rgba(255, 152, 170, 0.2);
+    color: #B20008;
+}
+
+.enrollments-table {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.enrollments-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.enrollments-table th,
+.enrollments-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.enrollments-table th {
+    background: #f8f9fa;
+    color: #333;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: #ffffff !important;
+
+}
+
+.completed {
+    background: #e1f5ec;
+    color: #009D22;
+}
+
+.in-progress {
+    background: #fff3e0;
+    color: #E65100;
+}
+
+.complete-btn {
+    background: #80CE91;
+    color: white;
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+.complete-btn:hover {
+    background: #5DBB77;
+}
+
+.course-form .form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.course-form .form-row .form-group {
+    flex: 1;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 700px;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.stats-summary {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    flex: 1;
+    min-width: 200px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 36px;
+    font-weight: bold;
+    color: #127b8e;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 14px;
+}
+
+.feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.feedback-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.user-info small {
+    color: #666;
+    font-size: 12px;
+}
+
+.feedback-body {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.feedback-footer {
+    font-size: 12px;
+    color: #999;
+    text-align: right;
+}
+
+.rating {
+    color: #ffc107;
+    font-size: 16px;
+}
+
+.back-btn {
+    font-size: 14px;
+    margin-left: 15px;
+    color: #127b8e;
+    text-decoration: none;
+}
+
+.back-btn:hover {
+    text-decoration: underline;
+}
