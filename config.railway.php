@@ -1,29 +1,37 @@
 <?php
-// Entrypoint writes env vars to file (PHP often can't read Railway's env directly)
-$mysql_url = file_exists('/tmp/railway_mysql_url') ? trim(file_get_contents('/tmp/railway_mysql_url')) : null;
-if (!$mysql_url) {
-    $mysql_url = $_SERVER['MYSQL_PRIVATE_URL'] ?? $_SERVER['MYSQL_URL'] ?? $_ENV['MYSQL_PRIVATE_URL'] ?? $_ENV['MYSQL_URL'] ?? getenv('MYSQL_PRIVATE_URL') ?: getenv('MYSQL_URL');
+// Entrypoint writes env vars to file (PHP can't read Railway's env)
+$db_host = $db_user = $db_pass = $db_name = null;
+$db_port = 3306;
+
+if (file_exists('/tmp/railway_mysql_url')) {
+    $mysql_url = trim(file_get_contents('/tmp/railway_mysql_url'));
+    if ($mysql_url) {
+        $parsed = parse_url($mysql_url);
+        $db_host = $parsed['host'] ?? null;
+        $db_port = isset($parsed['port']) ? (int)$parsed['port'] : 3306;
+        $db_user = $parsed['user'] ?? null;
+        $db_pass = $parsed['pass'] ?? '';
+        $db_name = isset($parsed['path']) ? ltrim($parsed['path'], '/') : null;
+    }
 }
-if ($mysql_url) {
-    $parsed = parse_url($mysql_url);
-    $db_host = $parsed['host'] ?? 'localhost';
-    $db_port = isset($parsed['port']) ? (int)$parsed['port'] : 3306;
-    $db_user = $parsed['user'] ?? 'root';
-    $db_pass = $parsed['pass'] ?? '';
-    $db_name = isset($parsed['path']) ? ltrim($parsed['path'], '/') : 'railway';
-} else {
-    $e = fn($k, $d = '') => $_SERVER[$k] ?? $_ENV[$k] ?? getenv($k) ?: $d;
-    $db_host = $e('MYSQLHOST', 'trolley.proxy.rlwy.net');
-    $db_user = $e('MYSQLUSER', 'root');
-    $db_pass = $e('MYSQLPASSWORD', '');
-    $db_name = $e('MYSQLDATABASE', 'railway');
-    $db_port = (int)$e('MYSQLPORT', '59231');
+if (!$db_host && file_exists('/tmp/railway_db_vars')) {
+    $vars = parse_ini_string(file_get_contents('/tmp/railway_db_vars'));
+    if ($vars) {
+        $db_host = $vars['host'] ?? null;
+        $db_user = $vars['user'] ?? null;
+        $db_pass = $vars['pass'] ?? '';
+        $db_name = $vars['db'] ?? null;
+        $db_port = (int)($vars['port'] ?? 3306);
+    }
 }
+$db_host = $db_host ?: 'localhost';
+$db_user = $db_user ?: 'root';
+$db_name = $db_name ?: 'railway';
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
 if ($conn->connect_error) {
-    if (empty($db_pass) && !$mysql_url) {
-        die("Database config missing: Add MYSQL_PRIVATE_URL or MYSQL_URL to your Railway service Variables (from the linked MySQL service).");
+    if (empty($db_pass)) {
+        die("Database password missing. In Railway: select your WEB APP service → Variables → Add Variable Reference → choose MySQL → add MYSQL_URL. Or add MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, MYSQLPORT. Redeploy after adding.");
     }
     die("Database connection error: " . $conn->connect_error);
 }
