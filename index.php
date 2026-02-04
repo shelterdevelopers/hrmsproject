@@ -1,5 +1,6 @@
 <?php
 session_start();
+if (file_exists("config.railway.php")) { require_once "config.railway.php"; } elseif (file_exists("config.php")) { require_once "config.php"; } else { die("Config missing"); }
 if (!defined('BASE_URL')) {
     require_once 'config.php';
 }
