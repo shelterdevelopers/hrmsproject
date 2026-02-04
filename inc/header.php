@@ -1,7 +1,5 @@
 <?php
-if (!defined('BASE_URL')) {
-    require_once __DIR__ . '/../config.php';
-}
+if (!defined('BASE_URL')) require_once __DIR__ . '/../load_config.php';
 
 // Add department-specific header styling (e.g., Sales Manager can have a different blue)
 $header_class = '';

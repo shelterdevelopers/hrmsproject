@@ -7,9 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!defined('BASE_URL')) {
-    require_once __DIR__ . '/../config.php';
-}
+if (!defined('BASE_URL')) require_once __DIR__ . '/../load_config.php';
 
 require_once __DIR__ . "/../DB_connection.php";
 require_once __DIR__ . "/Model/Attendance.php";

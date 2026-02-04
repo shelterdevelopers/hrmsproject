@@ -1,6 +1,6 @@
 <?php 
 session_start();
-if (!defined('BASE_URL')) require_once __DIR__ . '/../config.php';
+if (!defined('BASE_URL')) require_once __DIR__ . '/../load_config.php';
 require_once __DIR__ . "/Model/RoleHelper.php";
 if (isset($_SESSION['employee_id'])) {
     include "../DB_connection.php";

@@ -1,8 +1,6 @@
 <?php
 session_start();
-if (!defined('BASE_URL')) {
-    require_once 'config.php';
-}
+if (!defined('BASE_URL')) require_once __DIR__ . '/load_config.php';
 require_once "DB_connection.php";
 
 $token = $_GET['token'] ?? '';

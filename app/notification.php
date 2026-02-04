@@ -13,9 +13,7 @@ if (
 }
 
 if (isset($_SESSION['role'], $_SESSION['employee_id'])) {
-    if (!defined('BASE_URL')) {
-        require_once __DIR__ . '/../config.php';
-    }
+    if (!defined('BASE_URL')) require_once __DIR__ . '/../load_config.php';
     include "../DB_connection.php";
     include "Model/Notification.php";
     require_once "Model/RoleHelper.php";

@@ -1,7 +1,5 @@
 <?php
-if (!defined('BASE_URL')) {
-    require_once 'config.php';
-}
+if (!defined('BASE_URL')) require_once __DIR__ . '/load_config.php';
 ?>
 <!DOCTYPE html>
 <html>

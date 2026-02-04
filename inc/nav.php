@@ -5,9 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Define BASE_URL if not already defined
-if (!defined('BASE_URL')) {
-    require_once __DIR__ . '/../config.php';
-}
+if (!defined('BASE_URL')) require_once __DIR__ . '/../load_config.php';
 
 // --- NEW: Get the current page filename ---
 $current_page = basename($_SERVER['PHP_SELF']);
