@@ -5,7 +5,7 @@ $db_port = 3306;
 
 if (file_exists('/tmp/railway_mysql_url')) {
     $mysql_url = trim(file_get_contents('/tmp/railway_mysql_url'));
-    if ($mysql_url) {
+    if ($mysql_url && strpos($mysql_url, 'mysql://') === 0) {
         $parsed = parse_url($mysql_url);
         $db_host = $parsed['host'] ?? null;
         $db_port = isset($parsed['port']) ? (int)$parsed['port'] : 3306;
@@ -15,25 +15,26 @@ if (file_exists('/tmp/railway_mysql_url')) {
     }
 }
 if (!$db_host && file_exists('/tmp/railway_db_vars')) {
-    $vars = parse_ini_string(file_get_contents('/tmp/railway_db_vars'));
-    if ($vars) {
-        $db_host = $vars['host'] ?? null;
-        $db_user = $vars['user'] ?? null;
+    $vars = @parse_ini_string(file_get_contents('/tmp/railway_db_vars'));
+    if ($vars && !empty($vars['host'])) {
+        $db_host = $vars['host'];
+        $db_user = $vars['user'] ?? 'root';
         $db_pass = $vars['pass'] ?? '';
-        $db_name = $vars['db'] ?? null;
+        $db_name = $vars['db'] ?? 'railway';
         $db_port = (int)($vars['port'] ?? 3306);
     }
 }
-$db_host = $db_host ?: 'localhost';
+
+if (!$db_host || $db_host === 'localhost') {
+    die('Database config missing. In Railway: Web app → Variables → + New Variable → Name: MYSQL_URL → Value: paste the connection string from MySQL service (Variables → MYSQL_URL → Reveal). Then Redeploy.');
+}
 $db_user = $db_user ?: 'root';
+$db_pass = $db_pass ?? '';
 $db_name = $db_name ?: 'railway';
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
 if ($conn->connect_error) {
-    if (empty($db_pass)) {
-        die("Database password missing. In Railway: select your WEB APP service → Variables → Add Variable Reference → choose MySQL → add MYSQL_URL. Or add MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, MYSQLPORT. Redeploy after adding.");
-    }
-    die("Database connection error: " . $conn->connect_error);
+    die("Database connection failed: " . $conn->connect_error);
 }
 $conn->set_charset("utf8mb4");
 
