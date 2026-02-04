@@ -5,7 +5,7 @@
     "buildCommand": "echo 'Building HRMS PHP application'"
   },
   "deploy": {
-    "startCommand": "php -S 0.0.0.0:\$PORT",
+    "startCommand": "php -S 0.0.0.0:$PORT",
     "restartPolicyType": "ON_FAILURE"
   }
 }
