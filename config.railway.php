@@ -32,11 +32,12 @@ $db_user = $db_user ?: 'root';
 $db_pass = $db_pass ?? '';
 $db_name = $db_name ?: 'railway';
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
+try {
+    $conn = new PDO("mysql:host=$db_host;port=$db_port;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
 }
-$conn->set_charset("utf8mb4");
 
 // Required by app - config.php is gitignored so not present on Railway
 define('BASE_URL', '/');
