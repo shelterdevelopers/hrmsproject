@@ -1,6 +1,9 @@
-#!/bin/bash
-# Railway injects PORT - Apache must listen on it
-PORT=${PORT:-8080}
-sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf
-sed -i "s/:80/:${PORT}/" /etc/apache2/sites-available/000-default.conf
-exec apache2-foreground
+#!/bin/sh
+# Railway injects MySQL vars into container - shell can see them, PHP often cannot.
+# Write to file so config.railway.php can read them.
+if [ -n "$MYSQL_PRIVATE_URL" ]; then
+  printf '%s' "$MYSQL_PRIVATE_URL" > /tmp/railway_mysql_url
+elif [ -n "$MYSQL_URL" ]; then
+  printf '%s' "$MYSQL_URL" > /tmp/railway_mysql_url
+fi
+exec php -S 0.0.0.0:${PORT:-8080} -t /var/www/html

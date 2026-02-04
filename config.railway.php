@@ -1,6 +1,9 @@
 <?php
-// Railway provides MYSQL_URL or MYSQL_PRIVATE_URL - PHP getenv() often misses them, try $_SERVER too
-$mysql_url = $_SERVER['MYSQL_PRIVATE_URL'] ?? $_SERVER['MYSQL_URL'] ?? $_ENV['MYSQL_PRIVATE_URL'] ?? $_ENV['MYSQL_URL'] ?? getenv('MYSQL_PRIVATE_URL') ?: getenv('MYSQL_URL');
+// Entrypoint writes env vars to file (PHP often can't read Railway's env directly)
+$mysql_url = file_exists('/tmp/railway_mysql_url') ? trim(file_get_contents('/tmp/railway_mysql_url')) : null;
+if (!$mysql_url) {
+    $mysql_url = $_SERVER['MYSQL_PRIVATE_URL'] ?? $_SERVER['MYSQL_URL'] ?? $_ENV['MYSQL_PRIVATE_URL'] ?? $_ENV['MYSQL_URL'] ?? getenv('MYSQL_PRIVATE_URL') ?: getenv('MYSQL_URL');
+}
 if ($mysql_url) {
     $parsed = parse_url($mysql_url);
     $db_host = $parsed['host'] ?? 'localhost';
@@ -18,7 +21,12 @@ if ($mysql_url) {
 }
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
-if ($conn->connect_error) die("Database connection error.");
+if ($conn->connect_error) {
+    if (empty($db_pass) && !$mysql_url) {
+        die("Database config missing: Add MYSQL_PRIVATE_URL or MYSQL_URL to your Railway service Variables (from the linked MySQL service).");
+    }
+    die("Database connection error: " . $conn->connect_error);
+}
 $conn->set_charset("utf8mb4");
 
 // Required by app - config.php is gitignored so not present on Railway
