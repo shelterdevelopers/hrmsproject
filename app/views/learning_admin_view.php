@@ -152,7 +152,16 @@
                             <div class="form-group"><label>Description*</label><textarea name="description" class="input-1" rows="3" required></textarea></div>
                             <div class="form-row">
                                 <div class="form-group"><label>Duration (hrs)*</label><input type="number" name="duration" class="input-1" min="1" required></div>
-                                <div class="form-group"><label>Category*</label><input type="text" name="category" class="input-1" required></div>
+                                <div class="form-group">
+                                    <label>Category*</label>
+                                    <input type="text" name="category" class="input-1" list="category-list" required placeholder="Select or type a category" autocomplete="off">
+                                    <datalist id="category-list">
+                                        <?php foreach (isset($category_options) ? $category_options : [] as $cat): ?>
+                                            <option value="<?= htmlspecialchars($cat) ?>">
+                                        <?php endforeach; ?>
+                                    </datalist>
+                                    <small style="color:#666; font-size:12px;">Choose from the dropdown or type a new category.</small>
+                                </div>
                             </div>
                             <div class="form-group"><label>Link (Optional)</label><input type="url" name="link" class="input-1" placeholder="https://..."></div>
                             <button type="submit" name="add_course" class="btn"><i class="fa fa-plus"></i> Add Course to Catalog</button>
@@ -258,7 +267,7 @@
             document.querySelectorAll('.verify-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const enrollmentId = this.getAttribute('data-enrollment');
-                    if (confirm('Verify completion for enrollment ID ' + enrollmentId + '?')) {
+                    if (confirm('Are you sure you want to verify completion for enrollment ID ' + enrollmentId + '?')) {
                         fetch('verify_completion.php', {
                                 method: 'POST',
                                 headers: {
@@ -287,7 +296,7 @@
         document.querySelectorAll('.verify-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const enrollmentId = this.getAttribute('data-enrollment');
-                if (confirm('Verify this course completion?')) {
+                if (confirm('Are you sure you want to verify this course completion?')) {
                     fetch('verify_completion.php', {
                             method: 'POST',
                             headers: {

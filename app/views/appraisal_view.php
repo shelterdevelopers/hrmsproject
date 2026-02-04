@@ -194,7 +194,7 @@
                                             <?php
                                             $can_del = (isset($is_hr) && $is_hr) || (isset($is_managing_director) && $is_managing_director) || ((int)($form['manager_id'] ?? 0) === (int)$employee_id && in_array($form['appraisal_status'] ?? '', ['draft', 'shared', 'employee_review'], true));
                                             if ($can_del): ?>
-                                                <a href="delete_appraisal.php?id=<?= $form['form_id'] ?>" class="btn" style="background:#dc3545;" onclick="return confirm('Delete this appraisal?');"><i class="fa fa-trash"></i> Delete</a>
+                                                <a href="delete_appraisal.php?id=<?= $form['form_id'] ?>" class="btn" style="background:#dc3545;" onclick="return confirm('Are you sure you want to delete this appraisal?');"><i class="fa fa-trash"></i> Delete</a>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -207,7 +207,11 @@
                     <!-- Appraisals for you (you are the employee being appraised) -->
                     <h4 class="appraisal-section-title"><i class="fa fa-user"></i> Appraisals for you</h4>
                     <?php if (empty($active_receiving)): ?>
+                        <?php if (isset($can_conduct_appraisal) && $can_conduct_appraisal): ?>
+                        <p class="appraisal-section-empty">None at this time. When HR shares an appraisal with you, it will appear here and you can open it to complete your Self Assessment.</p>
+                        <?php else: ?>
                         <p class="appraisal-section-empty">None at this time. When your manager or HR shares an appraisal with you, it will appear here and you can open it to complete your Self Assessment.</p>
+                        <?php endif; ?>
                     <?php else: ?>
                         <?php $first_receiving = reset($active_receiving); $first_form_id = (int)($first_receiving['form_id'] ?? 0); ?>
                         <div style="margin-bottom: 20px; padding: 20px 24px; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border: 2px solid #2596be; border-radius: 12px;">
@@ -257,15 +261,19 @@
                 $show_hr_filing = isset($is_hr) && $is_hr;
                 ?>
                 <?php if (empty($completed_forms)): ?>
-                    <p>You don't have any completed appraisals.</p>
+                    <?php if (isset($show_hr_filing) && $show_hr_filing): ?>
+                        <p>No completed appraisals yet.</p>
+                    <?php else: ?>
+                        <p>You don't have any completed appraisals.</p>
+                    <?php endif; ?>
                 <?php else: ?>
                     <?php if ($show_hr_filing): ?>
-                        <!-- HR: single list of all completed appraisals for file-keeping (print both forms, sign, file) -->
+                        <!-- HR: single list of all completed appraisals for filing (employee + manager flows) -->
                         <h4 class="appraisal-section-title"><i class="fa fa-folder-open"></i> Completed appraisals (for filing)</h4>
                         <div class="appraisal-section-empty" style="margin-bottom: 16px; padding: 14px 18px; background: #e8f4f8; border-left: 4px solid #2596be; border-radius: 6px;">
                             <p style="margin: 0 0 8px 0; font-weight: 600; color: #0c5460;">Flow:</p>
-                            <p style="margin: 0 0 6px 0;"><strong>Average employees</strong> fill in Self Assessment first; when completed it goes to their manager. The manager appraises them using the <strong>Non-Managerial Performance Evaluation</strong> form. When done, both forms appear here for you to print and file.</p>
-                            <p style="margin: 0;"><strong>Managers (including HR)</strong> also fill Self Assessment; that goes to the MD. The MD appraises them using the <strong>Management Performance Evaluation</strong> form. When the MD is done, both forms appear here for you to print and file.</p>
+                            <p style="margin: 0 0 6px 0;"><strong>Employees:</strong> Complete their Self Assessment, then their department manager appraises them. When both forms are filled, they appear here for you to print and store as hard copies for filing.</p>
+                            <p style="margin: 0;"><strong>Managers:</strong> Complete their Self Assessment, then the MD appraises them. When both forms are filled, they appear here for you to print and store as hard copies for filing.</p>
                         </div>
                         <table class="appraisal-table">
                             <thead>
@@ -290,9 +298,9 @@
                                         <td><?= date('M d, Y', strtotime($form['period_start'])) ?> – <?= date('M d, Y', strtotime($form['period_end'])) ?></td>
                                         <td><?= !empty($form['completed_at']) ? date('M d, Y', strtotime($form['completed_at'])) : date('M d, Y', strtotime($form['updated_at'])) ?></td>
                                         <td>
-                                            <button type="button" class="btn" style="background:#2596be;" onclick="window.open('appraisal_print_self.php?id=<?= $fid ?>'); window.open('<?= htmlspecialchars($eval_print_file, ENT_QUOTES, 'UTF-8') ?>?id=<?= $fid ?>');"><i class="fa fa-print"></i> Print for filing</button>
+                                            <button type="button" class="btn" style="background:#2596be;" onclick="window.open('appraisal_print_self.php?id=<?= $fid ?>'); window.open('<?= htmlspecialchars($eval_print_file, ENT_QUOTES, 'UTF-8') ?>?id=<?= $fid ?>');" title="Print self-assessment and evaluation for filing"><i class="fa fa-print"></i> Print for filing</button>
                                             <a href="appraisal_detail.php?id=<?= $form['form_id'] ?>" class="btn"><i class="fa fa-eye"></i> View</a>
-                                            <a href="delete_appraisal.php?id=<?= $form['form_id'] ?>" class="btn" style="background:#dc3545;" onclick="return confirm('Delete this appraisal from records?');"><i class="fa fa-trash"></i> Delete</a>
+                                            <a href="delete_appraisal.php?id=<?= $form['form_id'] ?>" class="btn" style="background:#dc3545;" onclick="return confirm('Are you sure you want to delete this appraisal from records?');"><i class="fa fa-trash"></i> Delete</a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -323,7 +331,7 @@
                                             <td>
                                                 <a href="appraisal_detail.php?id=<?= $form['form_id'] ?>" class="btn"><i class="fa fa-eye"></i> View</a>
                                                 <?php if ((isset($is_hr) && $is_hr) || (isset($is_managing_director) && $is_managing_director)): ?>
-                                                    <a href="delete_appraisal.php?id=<?= $form['form_id'] ?>" class="btn" style="background:#dc3545;" onclick="return confirm('Delete this completed appraisal?');"><i class="fa fa-trash"></i> Delete</a>
+                                                    <a href="delete_appraisal.php?id=<?= $form['form_id'] ?>" class="btn" style="background:#dc3545;" onclick="return confirm('Are you sure you want to delete this completed appraisal?');"><i class="fa fa-trash"></i> Delete</a>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>
@@ -398,17 +406,19 @@
                                         $stmt->execute();
                                     }
                                 } elseif (isset($is_finance_manager) && $is_finance_manager) {
-                                    // Finance Manager (departmental manager) appraises their direct reports in Finance
+                                    // Finance Manager: everyone in Finance department except self
                                     $sql = "SELECT employee_id, first_name, last_name FROM employee 
-                                            WHERE department = ? AND status = 'active' AND manager_id = ?";
+                                            WHERE department = ? AND status = 'active' AND employee_id != ?";
                                     $stmt = $conn->prepare($sql);
                                     $stmt->execute([RoleHelper::DEPT_FINANCE, $employee_id]);
                                 } else {
-                                    // Departmental managers appraise their direct reports
+                                    // Departmental managers (e.g. Operations Manager): everyone in their department except the appraising manager
+                                    $dept = isset($user_department) ? $user_department : RoleHelper::get_department($conn, $employee_id);
                                     $sql = "SELECT employee_id, first_name, last_name FROM employee 
-                                            WHERE manager_id = ? AND status = 'active'";
+                                            WHERE department = ? AND status = 'active' AND employee_id != ? 
+                                            ORDER BY first_name, last_name";
                                     $stmt = $conn->prepare($sql);
-                                    $stmt->execute([$employee_id]);
+                                    $stmt->execute([$dept, $employee_id]);
                                 }
                                 $employees = $stmt->fetchAll();
 

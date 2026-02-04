@@ -313,8 +313,9 @@
                 <div class="page-header">
                     <h1>
                         <i class="fa fa-line-chart"></i>
-                        Activity Log
+                        Executive Insights
                     </h1>
+                    <p class="subtitle" style="color: var(--shelter-dark-gray); margin: 8px 0 0 0; font-size: 15px;">Applications, approvals and appraisals. Attendance check-in/out is not shown.</p>
                 </div>
 
                 <!-- Period Selector -->
@@ -331,11 +332,11 @@
                 </div>
 
 
-                <!-- Activity Feed -->
+                <!-- Activity Feed: applications, approvals, appraisals (no attendance) -->
                 <div class="insight-section">
                     <h2 class="section-header">
                         <i class="fa fa-list-alt"></i>
-                        Activity Feed
+                        Recent Activity (Applications, Approvals &amp; Appraisals)
                     </h2>
 
                     <?php if (empty($recent_activities)): ?>

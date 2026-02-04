@@ -105,12 +105,14 @@ elseif ($is_manager) {
     }
     
     // Department managers: announcements (department + company-wide)
-    $nav_items['app/department_announcement.php'] = ['icon' => 'fa-bullhorn', 'text' => 'Department Announcement'];
+    $nav_items['app/department_announcement.php'] = ['icon' => 'fa-bullhorn', 'text' => 'Post Department Announcement'];
+    $nav_items['app/department_announcements_view.php'] = ['icon' => 'fa-newspaper-o', 'text' => 'View Department Announcements'];
     $nav_items['app/company_announcements.php'] = ['icon' => 'fa-newspaper-o', 'text' => 'Company Announcements'];
 }
 // Regular employee navigation
 else {
     $nav_items = array_merge($base_nav, [
+        'app/department_announcements_view.php' => ['icon' => 'fa-newspaper-o', 'text' => 'Department Announcements'],
         'app/company_announcements.php' => ['icon' => 'fa-newspaper-o', 'text' => 'Company Announcements'],
     ]);
 }
@@ -140,7 +142,7 @@ $nav_items['logout.php'] = ['icon' => 'fa-sign-out', 'text' => 'Logout'];
         </a>
     </div>
 
-    <ul id="navList">
+    <ul id="navList"<?= (!empty($is_managing_director) || !empty($is_hr)) ? ' class="nav-md-scroll"' : '' ?>>
         <?php foreach ($nav_items as $url => $item): ?>
             <?php
             // --- NEW: Check if this item matches the current page ---
@@ -164,8 +166,8 @@ $nav_items['logout.php'] = ['icon' => 'fa-sign-out', 'text' => 'Logout'];
 
             $is_logout = (basename($url) === 'logout.php');
             ?>
-            <li <?= $is_active ? 'class="active"' : '' ?>>
-                <a href="<?= BASE_URL . $url ?>"<?= $is_logout ? ' onclick="return confirm(\'Do you really want to log out?\');"' : '' ?>>
+            <li <?= $is_active ? 'class="active"' : '' ?><?= $is_logout ? ' style="position: sticky; bottom: 0; background: var(--white); border-top: 1px solid var(--border-dark); margin-top: auto; padding-top: 10px;"' : '' ?>>
+                <a href="<?= BASE_URL . $url ?>"<?= $is_logout ? ' onclick="return confirm(\'Are you sure you want to log out?\');"' : '' ?>>
                     <i class="fa <?= htmlspecialchars($item['icon']) ?>" aria-hidden="true"></i>
                     <span><?= htmlspecialchars($item['text']) ?></span>
                 </a>

@@ -1,9 +1,15 @@
 <?php
 session_start();
-if (isset($_SESSION['role']) && isset($_SESSION['employee_id']) && in_array(strtolower($_SESSION['role']), ["admin", "hr", "managing_director"], true)) {
+if (!defined('BASE_URL')) require_once 'config.php';
+require_once "app/Model/RoleHelper.php";
+if (isset($_SESSION['employee_id'])) {
     include "DB_connection.php";
+    $can_post = RoleHelper::is_admin($conn, $_SESSION['employee_id'])
+        || RoleHelper::is_hr($conn, $_SESSION['employee_id'])
+        || RoleHelper::is_managing_director($conn, $_SESSION['employee_id']);
+}
+if (!empty($can_post)) {
     include "app/Model/User.php";
-
     $users = get_all_users($conn);
 ?>
     <!DOCTYPE html>
@@ -28,7 +34,7 @@ if (isset($_SESSION['role']) && isset($_SESSION['employee_id']) && in_array(strt
                     <h2>Send Company Announcement</h2>
                 </div>
 
-                <form method="POST" action="app/notify_all.php" class="form-1" onsubmit="return confirm('Send this company announcement to everyone?');">
+                <form method="POST" action="app/notify_all.php" class="form-1" onsubmit="return confirm('Are you sure you want to send this company announcement to everyone?');">
                     <div class="input-holder">
                         <label for="message">Message</label>
                         <textarea id="message" name="message" required class="input-1" rows="6"></textarea>

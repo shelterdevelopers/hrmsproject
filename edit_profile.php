@@ -51,19 +51,27 @@ if (isset($_SESSION['employee_id'])) {
                                             <i class="fa fa-user-circle"></i>
                                         <?php endif; ?>
                                     </div>
+                                    <?php if (file_exists("img/user" . $user['employee_id'] . ".png")): ?>
+                                        <a href="app/remove-profile-picture.php" 
+                                           class="btn" 
+                                           style="margin-top: 10px; display: inline-block; background: #dc3545; color: white;"
+                                           onclick="return confirm('Are you sure you want to remove your profile picture?');">
+                                            <i class="fa fa-trash"></i> Remove Picture
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="file-upload">
                                     <label class="file-upload-label">
                                         <i class="fa fa-camera"></i> Choose New Picture
                                         <input type="file" name="profile_picture" id="profilePicture"
-                                            accept="image/png, image/jpeg, image/jpg" class="input-1" required>
+                                            accept="image/png, image/jpeg, image/jpg" class="input-1">
                                     </label>
                                     <div class="file-info">Max size: 2MB (PNG, JPG/JPEG only)</div>
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" class="edit-btn">Update Picture</button>
+                        <button type="submit" class="edit-btn" id="updatePictureBtn" style="display: none;">Update Picture</button>
                     </form>
 
                     <!-- Profile Info Form -->
@@ -265,12 +273,15 @@ if (isset($_SESSION['employee_id'])) {
             // Show update button only when file is selected
             document.getElementById('profilePicture').addEventListener('change', function (e) {
                 const form = document.getElementById('pictureForm');
+                const updateBtn = document.getElementById('updatePictureBtn');
                 if (this.files.length > 0) {
                     form.classList.add('has-file');
                     document.querySelector('.file-info').textContent = this.files[0].name;
+                    updateBtn.style.display = 'inline-block';
                 } else {
                     form.classList.remove('has-file');
                     document.querySelector('.file-info').textContent = 'Max size: 2MB (PNG, JPG/JPEG only)';
+                    updateBtn.style.display = 'none';
                 }
             });
             // Password validation

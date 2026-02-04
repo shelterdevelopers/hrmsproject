@@ -86,17 +86,30 @@ if (isset($_POST['user_name']) && isset($_POST['password'])) {
                 }
 
                 // Successful login - Record attendance
+                // Get the check-in time BEFORE recording (so we can use the same timestamp)
+                if (!defined('APP_TIMEZONE')) {
+                    define('APP_TIMEZONE', 'Africa/Harare');
+                }
+                if (function_exists('date_default_timezone_set')) {
+                    date_default_timezone_set(APP_TIMEZONE);
+                }
+                $check_in_datetime = date('Y-m-d H:i:s'); // Full datetime for consistency
+                $check_in_time = date('H:i:s');
                 $attendance_recorded = Attendance::check_in($conn, $id);
 
-                // Log activity
-                require_once "../app/Model/ActivityLog.php";
-                ActivityLog::log(
-                    $conn,
-                    'attendance',
-                    "User logged in and checked in",
-                    $id,
-                    null
-                );
+                // Log activity with the SAME timestamp as check-in
+                if ($attendance_recorded) {
+                    require_once "../app/Model/ActivityLog.php";
+                    ActivityLog::log(
+                        $conn,
+                        'attendance',
+                        "User logged in and checked in at {$check_in_time}",
+                        $id,
+                        null,
+                        null,
+                        $check_in_datetime // Use the same timestamp as check-in
+                    );
+                }
 
                 // Set session variables
                 //$_SESSION['role'] = ucfirst($role); // Makes 'admin' → 'Admin'

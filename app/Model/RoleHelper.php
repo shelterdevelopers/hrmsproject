@@ -311,16 +311,10 @@ class RoleHelper
         $approver_dept = self::get_department($conn, $approver_id);
         
         // HR can approve loans (first approval) - handles both 'hr' and 'hr_manager' roles
+        // BUT HR cannot approve HR Manager's own loans (those go to Finance Manager first)
         if (self::is_hr($conn, $approver_id)) {
-            return true;
-        }
-        
-        // Finance Manager can approve loans (second approval for regular managers)
-        if (strtolower($approver_role) === self::ROLE_MANAGER && 
-            $approver_dept === self::DEPT_FINANCE) {
-            // Check if this is Finance Manager's own loan (goes to MD, not Finance Manager)
             if ($application_id) {
-                $sql = "SELECT e.employee_id, e.role, e.department 
+                $sql = "SELECT e.employee_id, e.role 
                         FROM applications a
                         JOIN employee e ON a.employee_id = e.employee_id
                         WHERE a.id = ?";
@@ -328,10 +322,46 @@ class RoleHelper
                 $stmt->execute([$application_id]);
                 $app = $stmt->fetch();
                 
-                // If it's Finance Manager's own loan, they can't approve it
+                // If it's HR Manager's own loan, they can't approve it (goes to Finance Manager first)
                 if ($app && $app['employee_id'] == $approver_id && 
-                    strcasecmp($app['department'], self::DEPT_FINANCE) === 0) {
-                    return false; // Finance Manager's own loan goes to MD
+                    (strtolower($app['role']) === 'hr_manager' || strtolower($app['role']) === 'hr')) {
+                    return false; // HR Manager's own loan goes to Finance Manager first
+                }
+            }
+            return true;
+        }
+        
+        // Finance Manager can approve loans (second approval for regular managers, first approval for HR Manager)
+        if (strtolower($approver_role) === self::ROLE_MANAGER && 
+            $approver_dept === self::DEPT_FINANCE) {
+            if ($application_id) {
+                $sql = "SELECT e.employee_id, e.role, e.department, a.hr_approval_status, a.finance_approval_status
+                        FROM applications a
+                        JOIN employee e ON a.employee_id = e.employee_id
+                        WHERE a.id = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([$application_id]);
+                $app = $stmt->fetch();
+                
+                if ($app) {
+                    // If it's Finance Manager's own loan, they can't approve it
+                    if ($app['employee_id'] == $approver_id && 
+                        strcasecmp($app['department'], self::DEPT_FINANCE) === 0) {
+                        return false; // Finance Manager's own loan goes to MD
+                    }
+                    
+                    // Check if it's HR Manager's loan (Finance Manager can approve as first approver)
+                    $applicant_role = strtolower($app['role'] ?? '');
+                    $is_hr_manager = ($applicant_role === 'hr_manager' || $applicant_role === 'hr');
+                    if ($is_hr_manager) {
+                        // Finance Manager can approve HR Manager loans (first approval, no HR approval needed)
+                        return true;
+                    }
+                    
+                    // For regular loans, Finance Manager needs HR approval first
+                    if ($app['hr_approval_status'] !== 'approved') {
+                        return false;
+                    }
                 }
             }
             return true;

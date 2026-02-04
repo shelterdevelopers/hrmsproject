@@ -138,12 +138,13 @@ if (isset($_SESSION['role']) && isset($_SESSION['employee_id'])) {
         $pending_appraisals_count = is_array($pending_appraisals) ? count($pending_appraisals) : 0;
     } elseif ($is_managing_director) {
         // Managing Director dashboard - sees all activity, pending approvals
+        // MD does NOT apply for leaves or loans, so no leave-related data needed
         // Count ALL active employees (not just role='employee')
         $sql_total_employees = "SELECT COUNT(*) FROM employee WHERE status = 'active'";
         $num_users = $conn->query($sql_total_employees)->fetchColumn();
         $pending_employees_count = count_pending_employees($conn);
         
-        // Pending applications – same source as MD Approvals tab
+        // Pending applications – same source as MD Approvals tab (only for approval, not application)
         $pending_applications = Attendance::get_md_pending_applications($conn);
         
         // Get recent activity count
@@ -165,6 +166,13 @@ if (isset($_SESSION['role']) && isset($_SESSION['employee_id'])) {
         $stmtN = $conn->prepare("SELECT * FROM notifications WHERE recipient = ? AND type != 'attendance' AND type != 'team_attendance' ORDER BY id DESC LIMIT 10");
         $stmtN->execute([$_SESSION['employee_id']]);
         $recent_notifications = $stmtN->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        
+        // Initialize leave-related variables to null for MD (they don't apply for leaves/loans)
+        $leave_balance = null;
+        $sick_leave_balance = null;
+        $employee_info = null;
+        $my_pending_applications = [];
+        $today_attendance = null;
         
     } elseif ($is_hr) {
         // HR Manager dashboard data
@@ -480,68 +488,58 @@ if (isset($_SESSION['role']) && isset($_SESSION['employee_id'])) {
                             </div>
                         </div>
                     <?php } elseif ($is_managing_director) { ?>
-                        <!-- Managing Director Dashboard - Readonly/Oversight -->
-                        <div class="dashboard md-dashboard">
-                            <!-- Pending Approvals Section -->
-                            <?php 
-                            $pending_leaves_count = count(array_filter($pending_applications, function($app) { return $app['type'] === 'leave'; }));
-                            $pending_loans_count = count(array_filter($pending_applications, function($app) { return $app['type'] === 'loan'; }));
-                            $total_pending = count($pending_applications);
-                            ?>
-                            <?php if ($total_pending > 0): ?>
-                                <div class="dashboard-item pending-approvals-highlight clickable" onclick="window.location.href='<?= BASE_URL ?>app/md_approvals.php'">
-                                    <i class="fa fa-check-circle"></i>
-                                    <span style="color: #ff6b6b; font-weight: 600;">
-                                        <?= $total_pending ?> Pending Application Approvals
-                                        (<?= $pending_leaves_count ?> Leaves, <?= $pending_loans_count ?> Loans)
-                                    </span>
-                                </div>
-                            <?php else: ?>
-                                <div class="dashboard-item clickable" onclick="window.location.href='<?= BASE_URL ?>app/md_approvals.php'">
-                                    <i class="fa fa-check-circle"></i>
-                                    <span>View Pending Application Approvals</span>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <div class="dashboard-item">
-                                <i class="fa fa-users"></i>
-                                <span><?= $num_users ?> Total Employees</span>
+                        <?php 
+                        $pending_leaves_count = count(array_filter($pending_applications, function($app) { return ($app['type'] ?? '') === 'leave'; }));
+                        $pending_loans_count = count(array_filter($pending_applications, function($app) { return ($app['type'] ?? '') === 'loan'; }));
+                        $total_pending = count($pending_applications);
+                        ?>
+                        <!-- Managing Director Dashboard - Executive Overview -->
+                        <div class="md-executive-dashboard">
+                            <div class="md-executive-header">
+                                <h2 class="md-executive-title"><i class="fa fa-dashboard"></i> Executive Overview</h2>
+                                <p class="md-executive-subtitle">Key metrics and actions at a glance</p>
                             </div>
-                            
-                            <?php if ($pending_employees_count > 0): ?>
-                                <div class="dashboard-item clickable" onclick="window.location.href='<?= BASE_URL ?>pending-employees.php'">
-                                    <i class="fa fa-user-plus"></i>
-                                    <span><a href="<?= BASE_URL ?>pending-employees.php"><?= $pending_employees_count ?> Pending Employee Registrations</a></span>
+                            <div class="md-executive-grid">
+                                <a href="<?= BASE_URL ?>app/md_approvals.php" class="md-executive-card md-card-priority <?= $total_pending > 0 ? 'has-pending' : '' ?>">
+                                    <div class="md-card-icon"><i class="fa fa-check-circle"></i></div>
+                                    <div class="md-card-value"><?= $total_pending ?></div>
+                                    <div class="md-card-label">Pending Approvals</div>
+                                    <?php if ($total_pending > 0): ?>
+                                        <div class="md-card-meta"><?= $pending_leaves_count ?> leave · <?= $pending_loans_count ?> loan</div>
+                                    <?php endif; ?>
+                                </a>
+                                <div class="md-executive-card">
+                                    <div class="md-card-icon"><i class="fa fa-users"></i></div>
+                                    <div class="md-card-value"><?= (int)$num_users ?></div>
+                                    <div class="md-card-label">Total Employees</div>
                                 </div>
-                            <?php endif; ?>
-                            
-                            <?php if ($pending_appraisals_count > 0): ?>
-                                <div class="dashboard-item clickable" onclick="window.location.href='<?= BASE_URL ?>app/appraisal.php'">
-                                    <i class="fa fa-star"></i>
-                                    <span><?= $pending_appraisals_count ?> Pending Manager Appraisals</span>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <?php if (!empty($pending_repayments)): ?>
-                                <div class="dashboard-item clickable" onclick="window.location.href='<?= BASE_URL ?>app/applications.php'">
-                                    <i class="fa fa-money"></i>
-                                    <span><?= count($pending_repayments) ?> Pending Loan Repayments</span>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <div class="dashboard-item clickable" onclick="window.location.href='<?= BASE_URL ?>notifications.php'">
-                                <i class="fa fa-bell"></i>
-                                <span><?= (int)$unread_notifications ?> Unread Notifications</span>
-                            </div>
-                            
-                            <div class="dashboard-item clickable" onclick="window.location.href='<?= BASE_URL ?>app/activity_log.php'">
-                                <i class="fa fa-bar-chart"></i>
-                                <span>Activity Log</span>
-                            </div>
-                            
-                            <div class="dashboard-item clickable" onclick="window.location.href='<?= BASE_URL ?>notify_all_form.php'">
-                                <i class="fa fa-bullhorn"></i>
-                                <span>Company Announcements</span>
+                                <?php if ($pending_employees_count > 0): ?>
+                                <a href="<?= BASE_URL ?>pending-employees.php" class="md-executive-card md-card-priority">
+                                    <div class="md-card-icon"><i class="fa fa-user-plus"></i></div>
+                                    <div class="md-card-value"><?= $pending_employees_count ?></div>
+                                    <div class="md-card-label">Pending Registrations</div>
+                                </a>
+                                <?php endif; ?>
+                                <?php if ($pending_appraisals_count > 0): ?>
+                                <a href="<?= BASE_URL ?>app/appraisal.php" class="md-executive-card">
+                                    <div class="md-card-icon"><i class="fa fa-star"></i></div>
+                                    <div class="md-card-value"><?= $pending_appraisals_count ?></div>
+                                    <div class="md-card-label">Pending Appraisals</div>
+                                </a>
+                                <?php endif; ?>
+                                <a href="<?= BASE_URL ?>notifications.php" class="md-executive-card">
+                                    <div class="md-card-icon"><i class="fa fa-bell"></i></div>
+                                    <div class="md-card-value"><?= (int)$unread_notifications ?></div>
+                                    <div class="md-card-label">Unread Notifications</div>
+                                </a>
+                                <a href="<?= BASE_URL ?>app/activity_log.php" class="md-executive-card">
+                                    <div class="md-card-icon"><i class="fa fa-line-chart"></i></div>
+                                    <div class="md-card-label">Activity &amp; Insights</div>
+                                </a>
+                                <a href="<?= BASE_URL ?>notify_all_form.php" class="md-executive-card">
+                                    <div class="md-card-icon"><i class="fa fa-bullhorn"></i></div>
+                                    <div class="md-card-label">Company Announcements</div>
+                                </a>
                             </div>
                         </div>
                         

@@ -39,10 +39,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Get attendance records
 $attendance = Attendance::get_attendance($conn, $_SESSION['employee_id'], $month, $year);
 
-// Get leave balance
-$sql = "SELECT normal_leave_days FROM employee WHERE employee_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->execute([$_SESSION['employee_id']]);
-$leave_balance = $stmt->fetchColumn();
+// Check if user is Managing Director (MD doesn't apply for leaves/loans)
+require_once "Model/RoleHelper.php";
+$is_managing_director = RoleHelper::is_managing_director($conn, $_SESSION['employee_id']);
+
+// Get leave balance (only for non-MD users)
+$leave_balance = null;
+if (!$is_managing_director) {
+    $sql = "SELECT normal_leave_days FROM employee WHERE employee_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([$_SESSION['employee_id']]);
+    $leave_balance = $stmt->fetchColumn();
+}
 
 include "views/attendance_view.php";

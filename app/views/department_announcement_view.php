@@ -25,7 +25,7 @@
                 <div class="danger"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
             
-            <form method="POST" class="form-1" onsubmit="return confirm('Post this announcement to your department only?');">
+            <form method="POST" class="form-1" onsubmit="return confirm('Are you sure you want to post this announcement to your department only?');">
                 <div class="input-holder">
                     <label for="message">Announcement Message</label>
                     <textarea id="message" name="message" required class="input-1" rows="8" 

@@ -26,11 +26,13 @@
                 <?php endif; ?>
                 
                 <div class="attendance-controls">
+                    <?php if (isset($leave_balance) && $leave_balance !== null): ?>
                     <div class="leave-info">
                         <span class="leave-balance">
                             <i class="fa fa-calendar"></i> Leave Days Remaining: <?= $leave_balance ?>
                         </span>
                     </div>
+                    <?php endif; ?>
                     
                     <div class="clock-actions">
                         <?php if (!isset($_SESSION['checked_in'])): ?>

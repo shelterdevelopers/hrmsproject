@@ -14,9 +14,9 @@ class ApplicationWorkflow
         try {
             $conn->beginTransaction();
             
-            // Get application details
+            // Get application details (include manager_id so we can notify manager when HR approves)
             $sql = "SELECT a.*, e.role as employee_role, e.department as employee_dept, 
-                           e.first_name, e.last_name
+                           e.first_name, e.last_name, e.manager_id
                     FROM applications a
                     JOIN employee e ON a.employee_id = e.employee_id
                     WHERE a.id = ?";
@@ -114,6 +114,16 @@ class ApplicationWorkflow
                         $message = "Your leave application has been {$status_text} by Managing Director.";
                         create_notification($conn, $app['employee_id'], $message, 'application');
                         
+                        // Notify HR (they had first approval) so all parties are in the loop
+                        $hr_ids = $conn->query("SELECT employee_id FROM employee WHERE LOWER(TRIM(role)) IN ('hr', 'hr_manager') AND status = 'active'");
+                        if ($hr_ids) {
+                            $employee_name = trim(($app['first_name'] ?? '') . ' ' . ($app['last_name'] ?? ''));
+                            foreach ($hr_ids->fetchAll(PDO::FETCH_COLUMN) as $hr_id) {
+                                $msg_hr = "Manager leave from {$employee_name} was {$status_text} by Managing Director.";
+                                create_notification($conn, (int)$hr_id, $msg_hr, 'application');
+                            }
+                        }
+                        
                         // Deduct leave days if approved
                         if ($status === 'approved') {
                             self::deduct_leave_days($conn, $app);
@@ -176,6 +186,13 @@ class ApplicationWorkflow
                         $message = "Your leave application has been {$status_text} by HR.";
                         create_notification($conn, $app['employee_id'], $message, 'application');
                         
+                        // Notify employee's manager so all parties are in the loop
+                        if (!empty($app['manager_id'])) {
+                            $employee_name = trim(($app['first_name'] ?? '') . ' ' . ($app['last_name'] ?? ''));
+                            $msg_mgr = "Leave application from {$employee_name} was {$status_text} by HR.";
+                            create_notification($conn, (int)$app['manager_id'], $msg_mgr, 'application');
+                        }
+                        
                         // Deduct leave days if approved
                         if ($status === 'approved') {
                             self::deduct_leave_days($conn, $app);
@@ -191,8 +208,12 @@ class ApplicationWorkflow
                                            ($employee_role_normalized === RoleHelper::ROLE_MANAGER || 
                                             strpos(strtolower($app['employee_role']), 'finance') !== false));
                 
-                if (RoleHelper::is_hr($conn, $approver_id)) {
-                    // First approval by HR
+                // Check if applicant is HR Manager
+                $is_hr_manager_loan = (strtolower($app['employee_role']) === 'hr_manager' || 
+                                      strtolower($app['employee_role']) === 'hr');
+                
+                if (RoleHelper::is_hr($conn, $approver_id) && !$is_hr_manager_loan) {
+                    // First approval by HR (but NOT for HR Manager loans - those go to Finance Manager first)
                     $sql = "UPDATE applications 
                             SET hr_approval_status = ?,
                                 hr_comment = ?,
@@ -216,7 +237,7 @@ class ApplicationWorkflow
                                 create_notification($conn, $md_id, $message, 'application');
                             }
                         } else {
-                            // Regular employee/manager loan (not Finance Manager): notify Finance Manager for second approval
+                            // Regular employee/manager loan (not Finance Manager, not HR Manager): notify Finance Manager for second approval
                             $finance_manager_id = RoleHelper::get_finance_manager_id($conn);
                             if ($finance_manager_id) {
                                 $message = "Loan application from {$employee_name} requires your approval (HR approved on {$harareNow})";
@@ -232,6 +253,83 @@ class ApplicationWorkflow
                         $harareNow = (new DateTime('now', new DateTimeZone('Africa/Harare')))->format('M d, Y H:i');
                         $message = "Your loan application was denied by HR on {$harareNow}.";
                         create_notification($conn, $app['employee_id'], $message, 'application');
+                    }
+                } elseif ($is_hr_manager_loan && RoleHelper::is_manager($conn, $approver_id) && 
+                          $approver_dept === RoleHelper::DEPT_FINANCE) {
+                    // HR Manager loan: First approval by Finance Manager (HR Manager can't approve their own)
+                    $sql = "UPDATE applications 
+                            SET finance_approval_status = ?,
+                                finance_comment = ?,
+                                updated_at = NOW()
+                            WHERE id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute([$status, $comment, $application_id]);
+                    
+                    if ($status === 'approved') {
+                        // Timestamped first-approval notification to applicant (Harare time)
+                        $harareNow = (new DateTime('now', new DateTimeZone('Africa/Harare')))->format('M d, Y H:i');
+                        $employee_name = trim(($app['first_name'] ?? '') . ' ' . ($app['last_name'] ?? '')) ?: 'An employee';
+                        $message = "Your loan application received first approval by Finance Manager on {$harareNow}. Awaiting Managing Director approval.";
+                        create_notification($conn, $app['employee_id'], $message, 'application');
+                        
+                        // Notify MD for second approval
+                        $md_id = RoleHelper::get_managing_director_id($conn);
+                        if ($md_id) {
+                            $message = "HR Manager loan application from {$employee_name} requires your approval (Finance Manager approved on {$harareNow})";
+                            create_notification($conn, $md_id, $message, 'application');
+                        }
+                    } else {
+                        // Denied by Finance Manager - final
+                        $sql = "UPDATE applications SET status = 'denied' WHERE id = ?";
+                        $stmt = $conn->prepare($sql);
+                        $stmt->execute([$application_id]);
+                        // Timestamped denial notification to applicant (Harare time)
+                        $harareNow = (new DateTime('now', new DateTimeZone('Africa/Harare')))->format('M d, Y H:i');
+                        $message = "Your loan application was denied by Finance Manager on {$harareNow}.";
+                        create_notification($conn, $app['employee_id'], $message, 'application');
+                    }
+                } elseif ($is_hr_manager_loan && RoleHelper::is_managing_director($conn, $approver_id)) {
+                    // HR Manager loan: Second approval by MD (after Finance Manager approval)
+                    if ($app['finance_approval_status'] !== 'approved') {
+                        throw new Exception("Finance Manager approval required before MD approval");
+                    }
+                    
+                    $sql = "UPDATE applications 
+                            SET md_approval_status = ?,
+                                md_comment = ?,
+                                status = ?,
+                                disbursed_amount = ?,
+                                outstanding_balance = ?,
+                                next_payment_date = DATE_ADD(CURDATE(), INTERVAL 1 MONTH),
+                                updated_at = NOW()
+                            WHERE id = ?";
+                    $final_status = ($status === 'approved') ? 'approved' : 'denied';
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute([
+                        $status, 
+                        $comment, 
+                        $final_status,
+                        $app['amount'],
+                        $app['amount'],
+                        $application_id
+                    ]);
+                    
+                    // Notify employee of final decision
+                    $status_text = ($status === 'approved') ? 'approved' : 'denied';
+                    $message = "Your loan application has been {$status_text} by Managing Director.";
+                    create_notification($conn, $app['employee_id'], $message, 'application');
+                    // Notify HR (different message)
+                    $hr_ids = $conn->query("SELECT employee_id FROM employee WHERE LOWER(role) IN ('hr', 'hr_manager') AND status = 'active'");
+                    if ($hr_ids) {
+                        $employee_name = trim(($app['first_name'] ?? '') . ' ' . ($app['last_name'] ?? ''));
+                        foreach ($hr_ids->fetchAll(PDO::FETCH_COLUMN) as $hr_id) {
+                            if ($status === 'approved') {
+                                $msg_hr = "HR Manager loan from {$employee_name} was approved by MD. Please prepare disbursement.";
+                            } else {
+                                $msg_hr = "HR Manager loan from {$employee_name} was denied by MD.";
+                            }
+                            create_notification($conn, (int)$hr_id, $msg_hr, 'application');
+                        }
                     }
                 } elseif ($is_finance_manager_loan && RoleHelper::is_managing_director($conn, $approver_id)) {
                     // Finance Manager loan: Second approval by MD

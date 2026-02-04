@@ -31,28 +31,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_announcement'])
         // Get all employees in the department
         $department_employees = RoleHelper::get_department_employees($conn, $department);
         
+        // Debug: Log department and employee count
+        error_log("Department announcement - Department: {$department}, Employees found: " . count($department_employees));
+        
         if (empty($department_employees)) {
-            $error = "No employees found in your department";
+            $error = "No employees found in your department ({$department}). Please verify your department is set correctly.";
         } else {
-            // Send notification to all department employees
+            $posted_by = (int) $_SESSION['employee_id'];
+            $full_message = "Department Announcement: " . $message;
             $sent_count = 0;
+            $errors = [];
+            $use_poster = function_exists('insert_notification_with_poster');
             foreach ($department_employees as $emp_id) {
-                if ($emp_id != $_SESSION['employee_id']) { // Don't notify self
-                    $notif_data = [
-                        "Department Announcement: " . $message,
-                        $emp_id,
-                        'department_announcement'
-                    ];
-                    if (insert_notification($conn, $notif_data)) {
-                        $sent_count++;
+                try {
+                    $sent = false;
+                    if ($use_poster) {
+                        $sent = insert_notification_with_poster($conn, $full_message, (int) $emp_id, 'department_announcement', $posted_by);
                     }
+                    if (!$sent) {
+                        $sent = insert_notification($conn, [$full_message, (int) $emp_id, 'department_announcement']);
+                    }
+                    if ($sent) {
+                        $sent_count++;
+                    } else {
+                        $errors[] = "Failed to send to employee ID: {$emp_id}";
+                    }
+                } catch (Exception $e) {
+                    $errors[] = "Error sending to employee ID {$emp_id}: " . $e->getMessage();
+                    error_log("Department announcement error: " . $e->getMessage());
                 }
             }
             
             if ($sent_count > 0) {
-                $success = "Announcement sent to {$sent_count} employees in {$department} department";
+                $success = "Announcement sent to {$sent_count} employee(s) in {$department} department";
+                if (!empty($errors)) {
+                    $success .= " (" . count($errors) . " failed)";
+                }
             } else {
-                $error = "Failed to send announcement";
+                $error = "Failed to send announcement. " . (implode("; ", array_slice($errors, 0, 3)));
             }
         }
     }

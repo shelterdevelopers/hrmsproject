@@ -132,6 +132,42 @@ if (isset($_SESSION['employee_id']) && ($is_admin || $is_hr)) {
                 margin: 0 !important;
                 table-layout: auto;
             }
+            /* Manage Users table - cleaner look */
+            .section-1 .table-responsive {
+                background: var(--white);
+                border-radius: 12px;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+                border: 1px solid var(--border-dark);
+                overflow: hidden;
+            }
+            .section-1 .main-table {
+                border: none !important;
+            }
+            .section-1 .main-table thead th {
+                background: var(--blue-dark) !important;
+                color: var(--white) !important;
+                padding: 14px 16px !important;
+                font-weight: 600 !important;
+                font-size: 14px !important;
+                text-transform: none;
+                letter-spacing: 0.02em;
+                border: none !important;
+                border-bottom: 2px solid var(--blue) !important;
+            }
+            .section-1 .main-table tbody td {
+                padding: 14px 16px !important;
+                border-bottom: 1px solid var(--grey-lighter) !important;
+                vertical-align: middle !important;
+            }
+            .section-1 .main-table tbody tr:hover {
+                background: var(--sky-blue-light) !important;
+            }
+            .section-1 .main-table tbody tr.pending-row {
+                background: var(--warning-light) !important;
+            }
+            .section-1 .main-table tbody tr.pending-row:hover {
+                background: #ffe69c !important;
+            }
             
             /* Add User Button - Make text visible */
             .title .btn {
@@ -383,7 +419,7 @@ if (isset($_SESSION['employee_id']) && ($is_admin || $is_hr)) {
                                                             <input type="hidden" name="employee_id" value="<?= $user['employee_id'] ?>">
                                                             <input type="hidden" name="action" value="reject">
                                                             <button type="submit" class="dropdown-item reject" 
-                                                                    onclick="return confirm('Reject this user? This will terminate their account.')">
+                                                                    onclick="return confirm('Are you sure you want to reject this user? This will terminate their account.')">
                                                                 <i class="fa fa-times"></i> Reject User
                                                             </button>
                                                         </form>
@@ -406,7 +442,7 @@ if (isset($_SESSION['employee_id']) && ($is_admin || $is_hr)) {
                                                     <form method="POST" action="app/unlock_account.php" style="display: contents;">
                                                         <input type="hidden" name="employee_id" value="<?= $user['employee_id'] ?>">
                                                         <button type="submit" class="dropdown-item" 
-                                                                onclick="return confirm('Unlock account for <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name'], ENT_QUOTES) ?>?')"
+                                                                onclick="return confirm('Are you sure you want to unlock the account for <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name'], ENT_QUOTES) ?>?')"
                                                                 style="background: none; border: none; width: 100%; text-align: left; cursor: pointer; color: #28a745;">
                                                             <i class="fa fa-unlock"></i> Unlock Account
                                                         </button>

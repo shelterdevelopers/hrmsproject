@@ -66,7 +66,7 @@
                 <?php foreach ($announcements as $announcement): 
                     $created_at = $announcement['created_at'] ?? $announcement['date'] ?? null;
                     $date_time = $created_at ? date('M d, Y \a\t g:i A', strtotime($created_at)) : date('M d, Y', strtotime($announcement['date'] ?? 'now'));
-                    $poster_name = isset($announcement['poster_name']) ? trim($announcement['poster_name']) : '';
+                    $poster_name = isset($announcement['poster_name']) ? trim((string)$announcement['poster_name']) : '';
                     $poster_role = isset($announcement['poster_role']) ? $announcement['poster_role'] : '';
                 ?>
                     <div class="announcement-card">
@@ -79,7 +79,7 @@
                             </div>
                             <div class="announcement-date">
                                 <i class="fa fa-calendar"></i> 
-                                <?= htmlspecialchars($date_time) ?>
+                                <span title="Date and time posted">Posted on <?= htmlspecialchars($date_time) ?></span>
                             </div>
                         </div>
                         <div class="announcement-message">

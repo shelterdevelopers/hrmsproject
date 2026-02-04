@@ -184,7 +184,7 @@
 
 @media (min-width: 992px) {
     .login-container {
-        margin-right: 80px;
         margin-left: auto;
+        margin-right: auto;
     }
 }

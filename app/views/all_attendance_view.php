@@ -46,20 +46,6 @@
             font-size: 13px;
             text-align: right;
         }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .stat-box {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .stat-box .label { font-size: 12px; color: #666; }
-        .stat-box .value { font-size: 24px; font-weight: bold; color: #2596be; }
         .attendance-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .attendance-table th { background: #2596be; color: white; padding: 10px; text-align: left; }
         .attendance-table td { padding: 8px; border-bottom: 1px solid #ddd; }
@@ -133,25 +119,6 @@
                             <div class="meta">
                                 <?= htmlspecialchars($emp['department'] ?? 'N/A') ?><br>
                                 <?= htmlspecialchars($emp['job_title'] ?? '') ?>
-                            </div>
-                        </div>
-
-                        <div class="stats-grid">
-                            <div class="stat-box">
-                                <div class="label">Present</div>
-                                <div class="value"><?= (int)$emp_stats['present'] ?></div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="label">Late</div>
-                                <div class="value"><?= (int)$emp_stats['late'] ?></div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="label">Leave</div>
-                                <div class="value"><?= (int)$emp_stats['leave'] ?></div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="label">Absent</div>
-                                <div class="value"><?= (int)$emp_stats['absent'] ?></div>
                             </div>
                         </div>
 

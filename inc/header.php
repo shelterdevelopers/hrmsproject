@@ -31,7 +31,7 @@ try {
         <label for="checkbox" class="header-menu-toggle" title="Toggle menu / full screen">
             <i id="navbtn" class="fa fa-bars" aria-hidden="true"></i>
         </label>
-        <a class="header-logout" href="<?= BASE_URL ?>logout.php" title="Logout" onclick="return confirm('Do you really want to log out?');">
+        <a class="header-logout" href="<?= BASE_URL ?>logout.php" title="Logout" onclick="return confirm('Are you sure you want to log out?');">
             <i class="fa fa-sign-out" aria-hidden="true"></i>
             <span>Logout</span>
         </a>

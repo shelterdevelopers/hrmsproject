@@ -105,6 +105,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // --- Fetch Data for Admin Display ---
 $courses = Learning::get_all_courses($conn); // Get all courses
 $enrollments = LearningAdmin::get_all_enrollments($conn); // All enrollments
+// Existing categories for course dropdown (plus defaults)
+$existing_categories = [];
+try {
+    $stmt = $conn->query("SELECT DISTINCT category FROM learning_courses WHERE category IS NOT NULL AND TRIM(category) != '' ORDER BY category");
+    if ($stmt) $existing_categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (Throwable $e) {}
+$category_options = array_unique(array_merge(
+    ['Compliance', 'Safety', 'Technical', 'Soft Skills', 'Leadership', 'HR', 'Finance', 'Operations', 'Customer Service', 'Other'],
+    $existing_categories
+));
+sort($category_options);
 
 // Admin's own suggestions (as employee)
 $my_suggestions = Learning::get_my_suggestions($conn, $employee_id);

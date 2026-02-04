@@ -336,7 +336,11 @@ body {
 
 .user-p img {
     width: 100px;
+    height: 100px;
     border-radius: 50%;
+    object-fit: cover !important;
+    object-position: center;
+    display: block;
 }
 
 .user-p h4 {
@@ -367,10 +371,47 @@ body {
 .side-bar ul {
     flex: 1; /* Allow the list to grow and shrink */
     overflow-y: auto; /* Make the list scrollable */
+}
+/* MD/HR account: ensure nav tabs scroll with visible scrollbar and reach all items */
+.side-bar ul.nav-md-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
     overflow-x: hidden;
-    min-height: 0; /* Important: allows flex item to shrink and scroll */
-    max-height: calc(100vh - 150px); /* Account for user profile section, ensures full scroll */
-    padding-bottom: 20px; /* Add padding at bottom for better scroll experience */
+    padding-bottom: 20px;
+    scrollbar-width: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure scrollbars are visible for managers */
+.side-bar ul::-webkit-scrollbar {
+    width: 8px;
+}
+
+.side-bar ul::-webkit-scrollbar-track {
+    background: var(--grey-lighter);
+    border-radius: 4px;
+}
+
+.side-bar ul::-webkit-scrollbar-thumb {
+    background: var(--blue);
+    border-radius: 4px;
+}
+
+.side-bar ul::-webkit-scrollbar-thumb:hover {
+    background: var(--blue-dark);
+}
+
+/* Make logout button always visible at bottom */
+.side-bar ul li:last-child {
+    position: sticky;
+    bottom: 0;
+    background: var(--white);
+    border-top: 1px solid var(--border-dark);
+    margin-top: auto;
+    padding-top: 10px;
+    z-index: 10;
 }
 
 html, body {
@@ -584,7 +625,9 @@ html, body {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: cover !important;
+    object-position: center;
+    display: block;
 }
 #checkbox:checked~.body .side-bar .user-p a {
     display: flex;
@@ -1289,6 +1332,9 @@ input[type="date"]::-moz-placeholder {
     display: none;
     /* Remove individual scrollbar - use main page scrollbar */
     overflow: visible;
+}
+.tab-content.active {
+    display: block !important;
 }
 
 .quiz-question {
@@ -2119,31 +2165,52 @@ select.input-1 option {
     height: 150px;
     margin: 0 auto 20px;
     position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
-.avatar img,
+.avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover !important;
+    object-position: center;
+    border: 4px solid #2596be;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: block;
+}
+
 .avatar .fa-user-circle {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid #2596be;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.avatar .fa-user-circle {
     display: flex;
     align-items: center;
     justify-content: center;
     background: #f8f9fa;
     color: #2596be;
     font-size: 140px;
+    border: 4px solid #2596be;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
+
 
 .current-avatar {
     text-align: center;
     margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.current-avatar .avatar {
+    flex-shrink: 0;
+    width: 150px;
+    height: 150px;
+    max-width: 150px;
+    max-height: 150px;
 }
 
 .picture-form {
@@ -3213,6 +3280,10 @@ thead th {
     color: var(--text-primary) !important;
     background: var(--sky-blue) !important;
     border-bottom: 2px solid var(--border-dark);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
 }
 
 td,

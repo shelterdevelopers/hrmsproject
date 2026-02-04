@@ -46,8 +46,8 @@ if ($is_managing_director) {
 // Admin is treated as employee for appraisals (no manager view)
 $is_employee = ($role == 'Admin' || ($role != 'Admin' && !Appraisal::is_manager($conn, $employee_id) && !$is_managing_director));
 
-// Handle tab selection
-$active_tab = $_GET['tab'] ?? 'active';
+// Handle tab selection (HR defaults to Completed so they see the filing section)
+$active_tab = $_GET['tab'] ?? ($is_hr ? 'completed' : 'active');
 
 // Show session success/error after redirect (e.g. after create appraisal)
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

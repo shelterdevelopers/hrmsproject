@@ -35,8 +35,8 @@ if ($is_hr || $is_managing_director) {
 } elseif ($is_manager) {
     $department = RoleHelper::get_department($conn, $employee_id);
     $is_finance_manager = (strcasecmp(trim($department), RoleHelper::DEPT_FINANCE) === 0);
-    // Department managers (except Finance) should NOT see loans; HR and MD already handled above
-    $show_loans = $is_finance_manager;
+    // All managers (including Operations Manager) can apply for leave and loan; loans go HR → Finance Manager
+    $show_loans = true;
 }
 
 // --- Form Submission Handling ---
@@ -177,6 +177,11 @@ foreach ($all_my_applications as $app) {
         } else { $app['repayment_history'] = []; }
         $my_loan_applications[] = $app;
     }
+}
+
+// If user has loan applications, they should be able to view them even if they can't apply for new ones
+if (!empty($my_loan_applications)) {
+    $show_loans = true;
 }
 
 // Fetch manager/admin specific data if applicable

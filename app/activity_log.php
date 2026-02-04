@@ -127,11 +127,17 @@ $last_week_end = date('Y-m-d', strtotime('-8 days'));
 $last_week_count = ActivityLog::get_activity_count($conn, ['date_from' => $last_week_start, 'date_to' => $last_week_end]);
 $activity_growth = $last_week_count > 0 ? round((($week_activity_count - $last_week_count) / $last_week_count) * 100, 1) : 0;
 
-// Detailed activity feed (exclude bulk auto-checkout so feed shows meaningful actions: approvals, announcements, logins, etc.)
-$recent_activities = ActivityLog::get_all_activities($conn, 60, 0, [
+// Detailed activity feed: applications, approvals, appraisals. Exclude attendance (MD does not need check-in/out detail).
+$recent_activities = ActivityLog::get_all_activities($conn, 100, 0, [
     'date_from' => $date_from,
     'date_to' => $date_to,
-    'exclude_activity_types' => ['attendance_auto_checkout'],
+    'exclude_activity_types' => [
+        'attendance_auto_checkout',
+        'attendance',
+        'attendance_checkin',
+        'attendance_checkout',
+        'team_attendance',
+    ],
 ]);
 
 include "views/activity_log_view.php";

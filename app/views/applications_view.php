@@ -22,6 +22,11 @@
             padding: 20px;
             width: 100%;
         }
+        /* Ensure active tab content is visible (leave/loan forms for all including Sales Manager) */
+        .applications-container .tab-content.active,
+        .section-1 .tab-content.active {
+            display: block !important;
+        }
         
         /* Ensure section-1 has scrollbars */
         .section-1 {
@@ -406,7 +411,9 @@
 
             <div class="tab-buttons">
                 <button class="tab-button active" data-tab="leaves">My Leaves</button>
+                <?php if (($show_loans ?? true) || !empty($my_loan_applications)): ?>
                 <button class="tab-button" data-tab="loans">My Loans</button>
+                <?php endif; ?>
                 <?php
                 // Show manager tabs if there's data for them - always show these tabs after My Leaves/My Loans
                 // Check if user has approval capabilities (manager, HR, or MD)
@@ -432,12 +439,12 @@
             </div>
 
             <div class="tab-container">
-                <!-- Persistent Headers -->
-                <div class="tab-headers" style="margin-bottom: 20px; border-bottom: 2px solid #2596be; padding-bottom: 10px;">
-                    <h2 id="leaves-header" style="display: block; margin: 0; color: #2596be; font-size: 24px;"><i class="fa fa-calendar"></i> My Leaves</h2>
-                    <h2 id="loans-header" style="display: none; margin: 0; color: #2596be; font-size: 24px;"><i class="fa fa-money"></i> My Loans</h2>
-                    <h2 id="approvals-header" style="display: none; margin: 0; color: #2596be; font-size: 24px;"><i class="fa fa-clock-o"></i> Pending Application Approvals</h2>
-                    <h2 id="responded-header" style="display: none; margin: 0; color: #2596be; font-size: 24px;"><i class="fa fa-check-circle"></i> Responded By Me</h2>
+                <!-- Persistent Headers - Always show Leaves and Loans labels -->
+                <div class="tab-headers" style="margin-bottom: 20px; border-bottom: 2px solid #2596be; padding-bottom: 10px; display: flex; align-items: center; gap: 30px; flex-wrap: wrap;">
+                    <h2 id="leaves-header" style="display: block; margin: 0; color: #2596be; font-size: 24px; flex-shrink: 0;"><i class="fa fa-calendar"></i> My Leaves</h2>
+                    <h2 id="loans-header" style="display: block; margin: 0; color: #28a745; font-size: 24px; flex-shrink: 0;"><i class="fa fa-money"></i> My Loans</h2>
+                    <h2 id="approvals-header" style="display: none; margin: 0; color: #2596be; font-size: 24px; flex-shrink: 0;"><i class="fa fa-clock-o"></i> Pending Application Approvals</h2>
+                    <h2 id="responded-header" style="display: none; margin: 0; color: #2596be; font-size: 24px; flex-shrink: 0;"><i class="fa fa-check-circle"></i> Responded By Me</h2>
                 </div>
 
                 <div id="leaves-tab" class="tab-content active">
@@ -485,7 +492,8 @@
                             <table class="main-table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Type</th>
+                                        <th>Application Type</th>
+                                        <th>Leave Type</th>
                                         <th>Dates</th>
                                         <th>Days</th>
                                         <th>Reason</th>
@@ -498,6 +506,11 @@
                                 <tbody>
                                     <?php foreach ($my_leave_applications as $app): ?>
                                         <tr>
+                                            <td>
+                                                <span class="status-badge" style="background: #2596be; color: white; padding: 5px 10px; border-radius: 4px;">
+                                                    <i class="fa fa-calendar"></i> Leave
+                                                </span>
+                                            </td>
                                             <td><?= htmlspecialchars(ucfirst($app['leave_type'])) ?></td>
                                             <td><?= htmlspecialchars($app['start_date']) ?> to <?= htmlspecialchars($app['end_date']) ?></td>
                                             <td><?= (int) $app['days_requested'] ?></td>
@@ -507,12 +520,12 @@
                                             <td><?= date('M d, Y', strtotime($app['created_at'])) ?></td>
                                             <td>
                                                 <?php if (($app['status'] ?? '') === 'pending'): ?>
-                                                    <form method="post" action="delete_application.php" style="display:inline;" onsubmit="return confirm('Cancel this leave application?');">
+                                                    <form method="post" action="delete_application.php" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this leave application?');">
                                                         <input type="hidden" name="application_id" value="<?= (int)$app['id'] ?>">
                                                         <button type="submit" class="btn btn-sm" style="background:#dc3545;">Cancel</button>
                                                     </form>
                                                 <?php elseif (isset($is_hr) && $is_hr || isset($is_managing_director) && $is_managing_director): ?>
-                                                    <form method="post" action="delete_application.php" style="display:inline;" onsubmit="return confirm('Delete this application from records?');">
+                                                    <form method="post" action="delete_application.php" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this application from records?');">
                                                         <input type="hidden" name="application_id" value="<?= (int)$app['id'] ?>">
                                                         <button type="submit" class="btn btn-sm" style="background:#6c757d;">Delete</button>
                                                     </form>
@@ -530,8 +543,13 @@
                     <?php endif; ?>
                 </div>
 
-                <?php if ($show_loans ?? true): ?>
+                <?php if (($show_loans ?? true) || !empty($my_loan_applications)): ?>
                 <div id="loans-tab" class="tab-content">
+                    <?php 
+                    // MD does not apply; everyone else (managers including Operations Manager, HR, Finance Manager, employees) can apply for loans
+                    $can_apply_loan = !($is_managing_director ?? false);
+                    ?>
+                    <?php if ($can_apply_loan): ?>
                     <h3>Apply for Loan</h3>
                     <form method="post" class="form-1">
                         <div class="form-group">
@@ -550,6 +568,11 @@
                     </form>
 
                     <hr style="margin: 30px 0;">
+                    <?php else: ?>
+                    <div class="info-box" style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+                        <i class="fa fa-info-circle"></i> <strong>Note:</strong> Managing Director does not apply for loans. You can view your existing loan applications here.
+                    </div>
+                    <?php endif; ?>
 
                     <h3>My Loan History</h3>
                     <?php if (!empty($my_loan_applications)): ?>
@@ -557,6 +580,7 @@
                             <table class="main-table table-hover">
                                 <thead>
                                     <tr>
+                                        <th>Application Type</th>
                                         <th>Amount</th>
                                         <th>Outstanding</th>
                                         <th>Plan (Months)</th>
@@ -568,6 +592,11 @@
                                 <tbody>
                                     <?php foreach ($my_loan_applications as $idx => $app): ?>
                                         <tr class="loan-summary-row" data-loan-id="<?= $app['id'] ?>" data-details-id="loan-details-<?= $idx ?>">
+                                            <td>
+                                                <span class="status-badge" style="background: #28a745; color: white; padding: 5px 10px; border-radius: 4px;">
+                                                    <i class="fa fa-money"></i> Loan
+                                                </span>
+                                            </td>
                                             <td>$<?= number_format($app['amount'], 2) ?></td>
                                             <td>$<?= number_format($app['outstanding_balance'] ?? $app['amount'], 2) ?></td>
                                             <td><?= htmlspecialchars($app['repayment_plan']) ?></td>
@@ -576,12 +605,12 @@
                                             <td>
                                                 <button class="btn btn-sm view-loan-details"><i class="fa fa-eye"></i> Details</button>
                                                 <?php if (($app['status'] ?? '') === 'pending'): ?>
-                                                    <form method="post" action="delete_application.php" style="display:inline;" onsubmit="return confirm('Cancel this loan application?');">
+                                                    <form method="post" action="delete_application.php" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this loan application?');">
                                                         <input type="hidden" name="application_id" value="<?= (int)$app['id'] ?>">
                                                         <button type="submit" class="btn btn-sm" style="background:#dc3545;">Cancel</button>
                                                     </form>
                                                 <?php elseif (isset($is_hr) && $is_hr || isset($is_managing_director) && $is_managing_director): ?>
-                                                    <form method="post" action="delete_application.php" style="display:inline;" onsubmit="return confirm('Delete this loan from records?');">
+                                                    <form method="post" action="delete_application.php" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this loan from records?');">
                                                         <input type="hidden" name="application_id" value="<?= (int)$app['id'] ?>">
                                                         <button type="submit" class="btn btn-sm" style="background:#6c757d;">Delete</button>
                                                     </form>
@@ -703,49 +732,51 @@
                                             $first_approver_name = 'HR';
                                         }
                                     ?>
-                                <div class="pending-application-card">
-                                    <div class="app-header">
-                                        <h4><?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></h4>
-                                        <span class="app-type">
-                                            <?= htmlspecialchars(ucfirst($app['type'])) ?>
-                                            <?php if ($app['type'] == 'leave' && isset($app['leave_type'])): ?>
-                                                <br><small>(<?= htmlspecialchars($app['leave_type']) ?>)</small>
-                                            <?php endif; ?>
-                                            <br><strong class="approval-stage"><?= $is_second ? 'Second approval' : 'First approval' ?><?= ($is_second && $first_approver_name) ? ' (Approved by ' . htmlspecialchars($first_approver_name) . ' first)' : '' ?></strong>
-                                        </span>
-                                    </div>
-                                    <div class="app-details">
-                                        <?php if ($app['type'] == 'leave'): ?>
-                                            <p><i class="fa fa-calendar"></i> <?= htmlspecialchars($app['start_date']) ?> to <?= htmlspecialchars($app['end_date']) ?></p>
-                                            <p><i class="fa fa-clock-o"></i> <?= (int)$app['days_requested'] ?> days requested</p>
-                                            <p><i class="fa fa-comment"></i> Reason: <?= nl2br(htmlspecialchars($app['reason'])) ?></p>
-                                        <?php else: ?>
-                                            <p><i class="fa fa-money"></i> Amount: $<?= number_format($app['amount'], 2) ?></p>
-                                            <p><i class="fa fa-calendar-check-o"></i> Plan: <?= htmlspecialchars($app['repayment_plan']) ?> Months</p>
-                                            <p><i class="fa fa-comment"></i> Reason: <?= nl2br(htmlspecialchars($app['reason'])) ?></p>
-                                            <?php if (!empty($app['hr_approval_status']) && $app['hr_approval_status'] == 'approved'): ?>
-                                                <p style="margin-top: 10px; padding: 8px; background-color: #d4edda; border-left: 3px solid #28a745; border-radius: 4px;">
-                                                    <i class="fa fa-check-circle" style="color: #28a745;"></i> <strong>HR Approved</strong> - Awaiting Finance Manager approval
-                                                </p>
-                                                <?php if (!empty($app['hr_first_approved_at'])): ?>
-                                                    <p style="margin-top: 8px; font-size: 13px; color: #555;">
-                                                        <i class="fa fa-clock-o"></i>
-                                                        First approval done by <strong>HR</strong> at
-                                                        <strong><?= date('M d, Y H:i', strtotime($app['hr_first_approved_at'])) ?></strong>
-                                                    </p>
+                                <div class="pending-application-card" style="padding: 15px; margin-bottom: 15px;">
+                                    <div class="app-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 16px;"><?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></h4>
+                                            <span class="app-type" style="font-size: 12px; color: #666;">
+                                                <?php if ($app['type'] == 'leave'): ?>
+                                                    <i class="fa fa-calendar"></i> Leave
+                                                <?php else: ?>
+                                                    <i class="fa fa-money"></i> Loan
                                                 <?php endif; ?>
+                                                <?php if ($is_second): ?>
+                                                    <span style="color: #28a745;">• <?= htmlspecialchars($first_approver_name) ?> Approved</span>
+                                                <?php endif; ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="app-details" style="font-size: 13px; margin-bottom: 12px; color: #555;">
+                                        <?php if ($app['type'] == 'leave'): ?>
+                                            <p style="margin: 5px 0;"><strong>Dates:</strong> <?= htmlspecialchars($app['start_date']) ?> - <?= htmlspecialchars($app['end_date']) ?> (<?= (int)$app['days_requested'] ?> days)</p>
+                                            <?php if (isset($app['leave_type'])): ?>
+                                                <p style="margin: 5px 0;"><strong>Type:</strong> <?= htmlspecialchars(ucfirst($app['leave_type'])) ?></p>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <p style="margin: 5px 0;"><strong>Amount:</strong> $<?= number_format($app['amount'], 2) ?> • <strong>Plan:</strong> <?= htmlspecialchars($app['repayment_plan']) ?> months</p>
+                                            <?php if (!empty($app['hr_approval_status']) && $app['hr_approval_status'] == 'approved'): ?>
+                                                <p style="margin: 5px 0; color: #28a745;"><i class="fa fa-check-circle"></i> HR Approved</p>
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
-                                    <form method="post" class="response-form"> <input type="hidden" name="application_id" value="<?= (int)$app['id'] ?>">
+                                    <form method="post" class="response-form" style="margin-top: 10px;">
+                                        <input type="hidden" name="application_id" value="<?= (int)$app['id'] ?>">
                                         <input type="hidden" name="respond_application" value="1">
-                                        <div class="form-group"><label>Response</label><select name="status" class="input-1" style="min-width: 220px; padding: 12px 15px; font-size: 15px;">
-                                                <option value="pending" selected>Keep Pending</option>
-                                                <option value="approved">Approve</option>
-                                                <option value="denied">Deny</option>
-                                            </select></div>
-                                        <div class="form-group"><label>Comment (Optional)</label><textarea name="comment" class="input-1" rows="2"></textarea></div>
-                                        <button type="submit" class="btn">Submit Response</button>
+                                        <div style="display: flex; gap: 10px; align-items: flex-end;">
+                                            <div style="flex: 1;">
+                                                <select name="status" class="input-1" style="width: 100%; padding: 8px;">
+                                                    <option value="pending">Keep Pending</option>
+                                                    <option value="approved">Approve</option>
+                                                    <option value="denied">Deny</option>
+                                                </select>
+                                            </div>
+                                            <div style="flex: 2;">
+                                                <textarea name="comment" class="input-1" rows="1" placeholder="Comment (optional)" style="width: 100%; padding: 8px;"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn" style="padding: 8px 20px;">Submit</button>
+                                        </div>
                                     </form>
                                 </div>
                             <?php endforeach; ?>
@@ -776,8 +807,8 @@
                             <table class="main-table table-hover">
                                 <thead>
                                     <tr>
+                                        <th>Application Type</th>
                                         <th>Applicant</th>
-                                        <th>Type</th>
                                         <th>Details</th>
                                         <th>Your Response</th>
                                         <th>Your Comment</th>
@@ -787,8 +818,21 @@
                                 <tbody>
                                     <?php foreach ($filtered_responded_applications as $app): ?>
                                         <tr>
+                                            <td>
+                                                <?php if ($app['type'] == 'leave'): ?>
+                                                    <span class="status-badge" style="background: #2596be; color: white; padding: 5px 10px; border-radius: 4px;">
+                                                        <i class="fa fa-calendar"></i> Leave
+                                                    </span>
+                                                    <?php if (isset($app['leave_type'])): ?>
+                                                        <br><small style="color: #666; margin-top: 3px; display: block;"><?= htmlspecialchars(ucfirst($app['leave_type'])) ?></small>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <span class="status-badge" style="background: #28a745; color: white; padding: 5px 10px; border-radius: 4px;">
+                                                        <i class="fa fa-money"></i> Loan
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td><?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></td>
-                                            <td><?= htmlspecialchars(ucfirst($app['type'])) ?> <?= $app['type'] == 'leave' ? '<small>(' . htmlspecialchars($app['leave_type']) . ')</small>' : '' ?></td>
                                             <td>
                                                 <?php if ($app['type'] == 'leave'): ?><?= htmlspecialchars($app['start_date']) ?> to <?= htmlspecialchars($app['end_date']) ?> (<?= (int)$app['days_requested'] ?> days)
                                                 <?php else: ?>$<?= number_format($app['amount'], 2) ?> / <?= htmlspecialchars($app['repayment_plan']) ?> Mo.
@@ -873,20 +917,20 @@
                     }
                 });
                 
-                // Show/hide persistent headers
-                document.querySelectorAll('.tab-headers h2').forEach(header => {
-                    header.style.display = 'none';
-                });
-                const headerMap = {
-                    'leaves-tab': 'leaves-header',
-                    'loans-tab': 'loans-header',
-                    'approvals-tab': 'approvals-header',
-                    'responded-tab': 'responded-header'
-                };
-                const headerId = headerMap[targetTabId];
-                if (headerId) {
-                    const header = document.getElementById(headerId);
-                    if (header) header.style.display = 'block';
+                // Show/hide persistent headers - Always keep Leaves and Loans visible
+                // Hide approval headers when not on those tabs
+                document.getElementById('approvals-header').style.display = 'none';
+                document.getElementById('responded-header').style.display = 'none';
+                
+                // Always show Leaves and Loans headers
+                document.getElementById('leaves-header').style.display = 'block';
+                document.getElementById('loans-header').style.display = 'block';
+                
+                // Show the appropriate header for approval/responded tabs
+                if (targetTabId === 'approvals-tab') {
+                    document.getElementById('approvals-header').style.display = 'block';
+                } else if (targetTabId === 'responded-tab') {
+                    document.getElementById('responded-header').style.display = 'block';
                 }
                 
                 localStorage.setItem('activeApplicationTab', targetTabId);

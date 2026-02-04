@@ -714,7 +714,7 @@
                     <?php elseif ($form['appraisal_status'] == 'shared' && $form['is_acknowledged']): ?>
                         <form method="post">
                             <button type="submit" name="finalize_appraisal" class="btn btn-success"
-                                onclick="return confirm('Finalize this appraisal? This cannot be undone.')">
+                                onclick="return confirm('Are you sure you want to finalize this appraisal? This cannot be undone.')">
                                 <i class="fa fa-lock"></i> Finalize Appraisal
                             </button>
                         </form>

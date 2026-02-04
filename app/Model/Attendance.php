@@ -129,6 +129,7 @@ class Attendance
         
         $date = date('Y-m-d');
         $time = date('H:i:s');
+        $datetime = date('Y-m-d H:i:s'); // Full datetime for consistency
 
         // Check if already checked in today
         $sql = "SELECT * FROM attendance WHERE employee_id = ? AND date = ?";
@@ -139,11 +140,11 @@ class Attendance
             return false; // Already checked in
         }
 
-        // Record attendance
-        $sql = "INSERT INTO attendance (employee_id, date, check_in, status) 
-                VALUES (?, ?, ?, 'present')";
+        // Record attendance with consistent timestamp
+        $sql = "INSERT INTO attendance (employee_id, date, check_in, status, created_at) 
+                VALUES (?, ?, ?, 'present', ?)";
         $stmt = $conn->prepare($sql);
-        $ok = $stmt->execute([$employee_id, $date, $time]);
+        $ok = $stmt->execute([$employee_id, $date, $time, $datetime]);
 
         // Notify manager + MD about team check-in (best-effort)
         if ($ok) {
@@ -407,6 +408,21 @@ class Attendance
             ]);
 
             if ($success) {
+                $application_id = $conn->lastInsertId();
+                
+                // Log activity
+                try {
+                    require_once __DIR__ . "/ActivityLog.php";
+                    $emp = $conn->prepare("SELECT first_name, last_name FROM employee WHERE employee_id = ?");
+                    $emp->execute([$employee_id]);
+                    $emp = $emp->fetch(PDO::FETCH_ASSOC);
+                    $applicant_name = $emp ? trim(($emp['first_name'] ?? '') . ' ' . ($emp['last_name'] ?? '')) : "Employee #{$employee_id}";
+                    $description = "{$applicant_name} submitted a leave application ({$leave_type}, {$start->format('d M Y')} - {$end->format('d M Y')})";
+                    ActivityLog::log($conn, 'leave_application', $description, $employee_id, $application_id);
+                } catch (\Throwable $e) {
+                    error_log("Activity log error: " . $e->getMessage());
+                }
+                
                 // Notify HR and the relevant manager (applies to all accounts)
                 try {
                     require_once __DIR__ . "/Notification.php";
@@ -656,49 +672,104 @@ public static function update_application($conn, $application_id, $status, $comm
         $applications = [];
 
         // 1. HR Manager leave applications (needs MD only)
+        // HR leaves go directly to MD - no manager approval needed
+        // HR leave applications should show up immediately when created
+        // Key conditions: status='pending', role is HR/hr_manager, and NOT yet approved by MD
         if ($md_column_exists) {
             $sql = "SELECT a.*, e.first_name, e.last_name, e.role as employee_role, e.department
-                    FROM applications a JOIN employee e ON a.employee_id = e.employee_id
-                    WHERE a.type = 'leave' AND a.status = 'pending'
-                    AND (e.role = 'hr' OR e.role = 'hr_manager')
+                    FROM applications a 
+                    JOIN employee e ON a.employee_id = e.employee_id
+                    WHERE a.type = 'leave' 
+                    AND a.status = 'pending'
+                    AND (
+                        LOWER(TRIM(e.role)) = 'hr' 
+                        OR LOWER(TRIM(e.role)) = 'hr_manager'
+                        OR LOWER(e.role) LIKE '%hr%'
+                    )
                     AND (a.md_approval_status IS NULL OR a.md_approval_status = 'pending')
                     ORDER BY a.created_at DESC";
         } else {
+            // Fallback if md_approval_status column doesn't exist
+            // HR leaves should have NULL manager_approval_status (they skip manager approval)
             $sql = "SELECT a.*, e.first_name, e.last_name, e.role as employee_role, e.department
-                    FROM applications a JOIN employee e ON a.employee_id = e.employee_id
-                    WHERE a.type = 'leave' AND a.status = 'pending'
-                    AND (e.role = 'hr' OR e.role = 'hr_manager')
-                    AND a.manager_approval_status IS NULL ORDER BY a.created_at DESC";
+                    FROM applications a 
+                    JOIN employee e ON a.employee_id = e.employee_id
+                    WHERE a.type = 'leave' 
+                    AND a.status = 'pending'
+                    AND (
+                        LOWER(TRIM(e.role)) = 'hr' 
+                        OR LOWER(TRIM(e.role)) = 'hr_manager'
+                        OR LOWER(e.role) LIKE '%hr%'
+                    )
+                    AND (a.manager_approval_status IS NULL OR a.manager_approval_status = 'pending')
+                    ORDER BY a.created_at DESC";
         }
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         $hr_leaves = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
         // 2. Other managers' leave applications (after HR approval, needs MD) – exclude hr_manager
+        // Managers' leave workflow: Manager applies → HR approves → MD approves
         if ($md_column_exists) {
             $sql = "SELECT a.*, e.first_name, e.last_name, e.role as employee_role, e.department
-                    FROM applications a JOIN employee e ON a.employee_id = e.employee_id
-                    WHERE a.type = 'leave' AND a.status = 'pending'
-                    AND (e.role = 'manager' OR e.role LIKE '%_manager') AND e.role != 'hr_manager' AND e.role != 'hr'
+                    FROM applications a 
+                    JOIN employee e ON a.employee_id = e.employee_id
+                    WHERE a.type = 'leave' 
+                    AND a.status = 'pending'
+                    AND (
+                        LOWER(TRIM(e.role)) = 'manager' 
+                        OR LOWER(TRIM(e.role)) LIKE '%_manager'
+                    )
+                    AND LOWER(TRIM(e.role)) != 'hr_manager' 
+                    AND LOWER(TRIM(e.role)) != 'hr'
+                    AND LOWER(TRIM(e.role)) != 'managing_director'
                     AND a.hr_approval_status = 'approved'
                     AND (a.md_approval_status IS NULL OR a.md_approval_status = 'pending')
                     ORDER BY a.created_at DESC";
         } else {
             $sql = "SELECT a.*, e.first_name, e.last_name, e.role as employee_role, e.department
-                    FROM applications a JOIN employee e ON a.employee_id = e.employee_id
-                    WHERE a.type = 'leave' AND a.status = 'pending'
-                    AND (e.role = 'manager' OR e.role LIKE '%_manager') AND e.role != 'hr_manager' AND e.role != 'hr'
-                    AND a.hr_approval_status = 'approved' AND a.md_approval_status IS NULL
+                    FROM applications a 
+                    JOIN employee e ON a.employee_id = e.employee_id
+                    WHERE a.type = 'leave' 
+                    AND a.status = 'pending'
+                    AND (
+                        LOWER(TRIM(e.role)) = 'manager' 
+                        OR LOWER(TRIM(e.role)) LIKE '%_manager'
+                    )
+                    AND LOWER(TRIM(e.role)) != 'hr_manager' 
+                    AND LOWER(TRIM(e.role)) != 'hr'
+                    AND LOWER(TRIM(e.role)) != 'managing_director'
+                    AND a.hr_approval_status = 'approved' 
+                    AND a.md_approval_status IS NULL
                     ORDER BY a.created_at DESC";
         }
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         $mgr_leaves = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        
+        // Debug: Log manager leaves found
+        error_log("MD Pending Applications - Manager Leaves found: " . count($mgr_leaves));
+        if (count($mgr_leaves) > 0) {
+            error_log("Manager Leaves sample: " . json_encode(array_slice($mgr_leaves, 0, 1)));
+        }
+        
+        // Debug: Check for any pending manager leaves that might not be matching
+        $debug_sql = "SELECT a.id, a.status, a.hr_approval_status, a.md_approval_status, e.role, e.first_name, e.last_name
+                      FROM applications a 
+                      JOIN employee e ON a.employee_id = e.employee_id
+                      WHERE a.type = 'leave' 
+                      AND a.status = 'pending'
+                      AND (LOWER(TRIM(e.role)) LIKE '%manager%' OR LOWER(TRIM(e.role)) = 'manager')
+                      AND LOWER(TRIM(e.role)) != 'hr_manager'
+                      LIMIT 10";
+        $debug_stmt = $conn->prepare($debug_sql);
+        $debug_stmt->execute();
+        $debug_results = $debug_stmt->fetchAll(PDO::FETCH_ASSOC);
+        error_log("Debug - All pending manager leaves: " . json_encode($debug_results));
 
         // 3. Finance Manager loan applications (after HR approval, needs MD)
-        // Finance Manager is identified by: being in Finance department with manager role
-        // OR having role = 'finance_manager'
-        // Simplified query to catch all Finance Manager loans
+        // Finance Manager is identified by: being in Finance department OR having role = 'finance_manager'
+        // Simplified query - just check department and role patterns
         if ($md_column_exists) {
             $sql = "SELECT a.*, e.first_name, e.last_name, e.role as employee_role, e.department
                     FROM applications a 
@@ -710,10 +781,7 @@ public static function update_application($conn, $application_id, $status, $comm
                     AND (
                         LOWER(TRIM(e.role)) = 'finance_manager'
                         OR LOWER(TRIM(e.role)) LIKE '%finance%manager%'
-                        OR (LOWER(TRIM(e.department)) = 'finance' 
-                            AND (LOWER(TRIM(e.role)) LIKE '%manager%' 
-                                 OR LOWER(TRIM(e.role)) = 'manager'
-                                 OR LOWER(TRIM(e.role)) LIKE '%_manager'))
+                        OR LOWER(TRIM(e.department)) = 'finance'
                     )
                     ORDER BY a.created_at DESC";
         } else {
@@ -727,10 +795,7 @@ public static function update_application($conn, $application_id, $status, $comm
                     AND (
                         LOWER(TRIM(e.role)) = 'finance_manager'
                         OR LOWER(TRIM(e.role)) LIKE '%finance%manager%'
-                        OR (LOWER(TRIM(e.department)) = 'finance' 
-                            AND (LOWER(TRIM(e.role)) LIKE '%manager%' 
-                                 OR LOWER(TRIM(e.role)) = 'manager'
-                                 OR LOWER(TRIM(e.role)) LIKE '%_manager'))
+                        OR LOWER(TRIM(e.department)) = 'finance'
                     )
                     ORDER BY a.created_at DESC";
         }
@@ -826,23 +891,36 @@ public static function update_application($conn, $application_id, $status, $comm
             ]);
 
             if ($success) {
-                // Notify HR and the relevant manager (applies to all accounts)
+                // Notify appropriate approvers based on applicant role
                 try {
                     require_once __DIR__ . "/Notification.php";
                     require_once __DIR__ . "/RoleHelper.php";
-                    $emp = $conn->prepare("SELECT first_name, last_name, manager_id FROM employee WHERE employee_id = ?");
+                    $emp = $conn->prepare("SELECT first_name, last_name, manager_id, role FROM employee WHERE employee_id = ?");
                     $emp->execute([$employee_id]);
                     $emp = $emp->fetch(PDO::FETCH_ASSOC);
                     $applicant_name = $emp ? trim(($emp['first_name'] ?? '') . ' ' . ($emp['last_name'] ?? '')) : "Employee #{$employee_id}";
+                    $applicant_role = strtolower($emp['role'] ?? '');
+                    $is_hr_manager = ($applicant_role === 'hr_manager' || $applicant_role === 'hr');
+                    
                     $msg = $applicant_name . " applied for a loan - pending approval";
-                    if (!empty($emp['manager_id'])) {
-                        create_notification($conn, (int)$emp['manager_id'], $msg, 'application');
-                    }
-                    $hrs = $conn->query("SELECT employee_id FROM employee WHERE LOWER(role) IN ('hr', 'hr_manager') AND status = 'active'");
-                    if ($hrs) {
-                        while ($row = $hrs->fetch(PDO::FETCH_ASSOC)) {
-                            if (!empty($row['employee_id'])) {
-                                create_notification($conn, (int)$row['employee_id'], $msg, 'application');
+                    
+                    if ($is_hr_manager) {
+                        // HR Manager loans: notify Finance Manager first (not HR, since HR Manager can't approve their own)
+                        $finance_manager_id = RoleHelper::get_finance_manager_id($conn);
+                        if ($finance_manager_id) {
+                            create_notification($conn, (int)$finance_manager_id, $msg, 'application');
+                        }
+                    } else {
+                        // Regular loans: notify HR first
+                        if (!empty($emp['manager_id'])) {
+                            create_notification($conn, (int)$emp['manager_id'], $msg, 'application');
+                        }
+                        $hrs = $conn->query("SELECT employee_id FROM employee WHERE LOWER(role) IN ('hr', 'hr_manager') AND status = 'active'");
+                        if ($hrs) {
+                            while ($row = $hrs->fetch(PDO::FETCH_ASSOC)) {
+                                if (!empty($row['employee_id'])) {
+                                    create_notification($conn, (int)$row['employee_id'], $msg, 'application');
+                                }
                             }
                         }
                     }

@@ -84,9 +84,14 @@ $sql = "SELECT COUNT(id) AS count FROM notifications WHERE recipient=? AND is_re
 
 if (!function_exists('insert_notification')) {
 function insert_notification($conn, $data){
-	$sql = "INSERT INTO notifications (message, recipient, type) VALUES(?,?,?)";
-	$stmt = $conn->prepare($sql);
-	$stmt->execute($data);
+	try {
+		$sql = "INSERT INTO notifications (message, recipient, type) VALUES(?,?,?)";
+		$stmt = $conn->prepare($sql);
+		return $stmt->execute($data);
+	} catch (Exception $e) {
+		error_log("Failed to insert notification: " . $e->getMessage());
+		return false;
+	}
 }
 }
 

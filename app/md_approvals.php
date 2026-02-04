@@ -79,8 +79,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['respond_application'])
 
 // Pending applications – same source as dashboard (Attendance::get_md_pending_applications)
 $pending_applications = Attendance::get_md_pending_applications($conn);
-$pending_leaves = array_values(array_filter($pending_applications, function ($a) { return ($a['type'] ?? '') === 'leave'; }));
-$pending_loans = array_values(array_filter($pending_applications, function ($a) { return ($a['type'] ?? '') === 'loan'; }));
+$pending_leaves = array_values(array_filter($pending_applications, function ($a) { return strtolower(trim($a['type'] ?? '')) === 'leave'; }));
+$pending_loans = array_values(array_filter($pending_applications, function ($a) { return strtolower(trim($a['type'] ?? '')) === 'loan'; }));
+
+// Debug: Log what we're getting
+error_log("MD Approvals Page - Total pending: " . count($pending_applications));
+error_log("MD Approvals Page - Pending leaves: " . count($pending_leaves));
+error_log("MD Approvals Page - Pending loans: " . count($pending_loans));
+if (count($pending_applications) > 0) {
+    error_log("MD Approvals Page - Sample: " . json_encode(array_slice($pending_applications, 0, 2)));
+}
+
+// Debug: Check for ALL pending manager leave applications (regardless of HR approval)
+$debug_all_mgr_leaves = "SELECT a.id, a.status, a.hr_approval_status, a.md_approval_status, 
+                          e.role, e.first_name, e.last_name, e.department
+                          FROM applications a 
+                          JOIN employee e ON a.employee_id = e.employee_id
+                          WHERE a.type = 'leave' 
+                          AND a.status = 'pending'
+                          AND (LOWER(TRIM(e.role)) LIKE '%manager%' OR LOWER(TRIM(e.role)) = 'manager')
+                          AND LOWER(TRIM(e.role)) != 'hr_manager'
+                          AND LOWER(TRIM(e.role)) != 'managing_director'
+                          ORDER BY a.created_at DESC
+                          LIMIT 20";
+$debug_mgr_stmt = $conn->prepare($debug_all_mgr_leaves);
+$debug_mgr_stmt->execute();
+$debug_mgr_results = $debug_mgr_stmt->fetchAll(PDO::FETCH_ASSOC);
+error_log("Debug - All pending manager leaves: " . json_encode($debug_mgr_results));
+
+// Debug: Check for Finance Manager loans directly
+$debug_fm_loans = "SELECT a.*, e.first_name, e.last_name, e.role as employee_role, e.department, 
+                    a.hr_approval_status, a.md_approval_status, a.status
+                    FROM applications a 
+                    JOIN employee e ON a.employee_id = e.employee_id
+                    WHERE a.type = 'loan' 
+                    AND a.status = 'pending'
+                    AND a.hr_approval_status = 'approved'
+                    AND (LOWER(TRIM(e.role)) = 'finance_manager' 
+                         OR LOWER(TRIM(e.role)) LIKE '%finance%manager%'
+                         OR (LOWER(TRIM(e.department)) = 'finance' AND LOWER(TRIM(e.role)) LIKE '%manager%'))";
+$debug_stmt = $conn->prepare($debug_fm_loans);
+$debug_stmt->execute();
+$debug_results = $debug_stmt->fetchAll(PDO::FETCH_ASSOC);
+error_log("Debug Finance Manager Loans: " . json_encode($debug_results));
 
 // Debug: Log what we're getting (remove in production)
 // error_log("MD Approvals - Pending Leaves: " . count($pending_leaves));
@@ -117,6 +158,14 @@ if (ob_get_level() > 0) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>css/style.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>css/aesthetic-improvements.css">
+    <style>
+        .main-table .app-detail-cell { min-width: 220px; max-width: 400px; white-space: normal; word-break: break-word; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        /* Ensure active tab content is visible (critical: style.css sets .tab-content { display:none }) */
+        .tab-content.active { display: block !important; }
+        .tab-container .tab-content { padding: 20px; background: var(--white); }
+        .tab-buttons .tab-button { cursor: pointer; user-select: none; }
+    </style>
 </head>
 <body>
     <input type="checkbox" id="checkbox">
@@ -146,11 +195,13 @@ if (ob_get_level() > 0) {
                     <!-- Tabs for Leaves and Loans -->
                     <div class="tab-container">
                         <div class="tab-buttons">
-                            <button class="tab-button active" onclick="showTab('leaves')">
-                                <i class="fa fa-calendar"></i> Leave Applications (<?= count($pending_leaves) ?>)
+                            <button type="button" class="tab-button active" onclick="showTab(event, 'leaves')" aria-label="Leave applications">
+                                <i class="fa fa-calendar" aria-hidden="true"></i>
+                                <span>Leave Applications (<?= count($pending_leaves) ?>)</span>
                             </button>
-                            <button class="tab-button" onclick="showTab('loans')">
-                                <i class="fa fa-money"></i> Loan Applications (<?= count($pending_loans) ?>)
+                            <button type="button" class="tab-button" onclick="showTab(event, 'loans')" aria-label="Loan applications">
+                                <i class="fa fa-money" aria-hidden="true"></i>
+                                <span>Loan Applications (<?= count($pending_loans) ?>)</span>
                             </button>
                         </div>
                         
@@ -166,6 +217,7 @@ if (ob_get_level() > 0) {
                                     <table class="main-table">
                                         <thead>
                                             <tr>
+                                                <th>Type</th>
                                                 <th>Employee</th>
                                                 <th>Details</th>
                                                 <th>Date Submitted</th>
@@ -174,16 +226,29 @@ if (ob_get_level() > 0) {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($pending_leaves as $app): ?>
+                                            <?php foreach ($pending_leaves as $app): 
+                                                $start = $app['start_date'] ?? null;
+                                                $end = $app['end_date'] ?? null;
+                                                $days = $app['days_requested'] ?? 'N/A';
+                                                $leaveType = $app['leave_type'] ?? 'N/A';
+                                                $reason = $app['reason'] ?? '';
+                                                $created = $app['created_at'] ?? '';
+                                                $name = trim(($app['first_name'] ?? '') . ' ' . ($app['last_name'] ?? ''));
+                                            ?>
                                                 <tr>
-                                                    <td><?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></td>
                                                     <td>
-                                                        <strong>Duration:</strong> <?= date('M d, Y', strtotime($app['start_date'])) ?> to <?= date('M d, Y', strtotime($app['end_date'])) ?><br>
-                                                        <strong>Days:</strong> <?= $app['days_requested'] ?? 'N/A' ?><br>
-                                                        <strong>Leave Type:</strong> <?= htmlspecialchars($app['leave_type'] ?? 'N/A') ?><br>
-                                                        <strong>Reason:</strong> <?= htmlspecialchars($app['reason']) ?>
+                                                        <span class="status-badge" style="background: #2596be; color: white; padding: 5px 10px; border-radius: 4px;">
+                                                            <i class="fa fa-calendar"></i> Leave
+                                                        </span>
                                                     </td>
-                                                    <td><?= date('M d, Y', strtotime($app['created_at'])) ?></td>
+                                                    <td><?= htmlspecialchars($name ?: 'Employee #' . ($app['employee_id'] ?? '')) ?></td>
+                                                    <td class="app-detail-cell">
+                                                        <strong>Duration:</strong> <?= $start ? date('M d, Y', strtotime($start)) : 'N/A' ?> to <?= $end ? date('M d, Y', strtotime($end)) : 'N/A' ?><br>
+                                                        <strong>Days:</strong> <?= htmlspecialchars((string)$days) ?><br>
+                                                        <strong>Leave Type:</strong> <?= htmlspecialchars((string)$leaveType) ?><br>
+                                                        <strong>Reason:</strong> <?= htmlspecialchars((string)$reason) ?>
+                                                    </td>
+                                                    <td><?= $created ? date('M d, Y', strtotime($created)) : '—' ?></td>
                                                     <td>
                                                         <?php if ($app['employee_role'] == 'hr' || $app['employee_role'] == 'hr_manager'): ?>
                                                             <span class="status-badge" style="background: #ffc107;">Awaiting MD Approval</span>
@@ -227,6 +292,7 @@ if (ob_get_level() > 0) {
                                     <table class="main-table">
                                         <thead>
                                             <tr>
+                                                <th>Type</th>
                                                 <th>Employee</th>
                                                 <th>Details</th>
                                                 <th>Date Submitted</th>
@@ -235,15 +301,26 @@ if (ob_get_level() > 0) {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($pending_loans as $app): ?>
+                                            <?php foreach ($pending_loans as $app): 
+                                                $amount = isset($app['amount']) ? (float)$app['amount'] : 0;
+                                                $repayment = $app['repayment_plan'] ?? 'N/A';
+                                                $reasonLoan = $app['reason'] ?? '';
+                                                $createdLoan = $app['created_at'] ?? '';
+                                                $nameLoan = trim(($app['first_name'] ?? '') . ' ' . ($app['last_name'] ?? ''));
+                                            ?>
                                                 <tr>
-                                                    <td><?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></td>
                                                     <td>
-                                                        <strong>Amount:</strong> $<?= number_format($app['amount'], 2) ?><br>
-                                                        <strong>Repayment Period:</strong> <?= $app['repayment_plan'] ?> months<br>
-                                                        <strong>Reason:</strong> <?= htmlspecialchars($app['reason']) ?>
+                                                        <span class="status-badge" style="background: #28a745; color: white; padding: 5px 10px; border-radius: 4px;">
+                                                            <i class="fa fa-money"></i> Loan
+                                                        </span>
                                                     </td>
-                                                    <td><?= date('M d, Y', strtotime($app['created_at'])) ?></td>
+                                                    <td><?= htmlspecialchars($nameLoan ?: 'Employee #' . ($app['employee_id'] ?? '')) ?></td>
+                                                    <td class="app-detail-cell">
+                                                        <strong>Amount:</strong> $<?= number_format($amount, 2) ?><br>
+                                                        <strong>Repayment Period:</strong> <?= htmlspecialchars((string)$repayment) ?> months<br>
+                                                        <strong>Reason:</strong> <?= htmlspecialchars((string)$reasonLoan) ?>
+                                                    </td>
+                                                    <td><?= $createdLoan ? date('M d, Y', strtotime($createdLoan)) : '—' ?></td>
                                                     <td>
                                                         <?php if ($app['hr_approval_status'] == 'approved'): ?>
                                                             <span class="status-badge" style="background: #17a2b8;">HR Approved → MD</span>
@@ -284,8 +361,8 @@ if (ob_get_level() > 0) {
                         <table class="main-table">
                             <thead>
                                 <tr>
-                                    <th>Employee</th>
                                     <th>Type</th>
+                                    <th>Employee</th>
                                     <th>Details</th>
                                     <th>Your Decision</th>
                                     <th>Date</th>
@@ -294,8 +371,18 @@ if (ob_get_level() > 0) {
                             <tbody>
                                 <?php foreach ($responded_applications as $app): ?>
                                     <tr>
+                                        <td>
+                                            <?php if ($app['type'] == 'leave'): ?>
+                                                <span class="status-badge" style="background: #2596be; color: white; padding: 5px 10px; border-radius: 4px;">
+                                                    <i class="fa fa-calendar"></i> Leave
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="status-badge" style="background: #28a745; color: white; padding: 5px 10px; border-radius: 4px;">
+                                                    <i class="fa fa-money"></i> Loan
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></td>
-                                        <td><span class="status-badge"><?= ucfirst($app['type']) ?></span></td>
                                         <td>
                                             <?php if ($app['type'] == 'leave'): ?>
                                                 <?= date('M d', strtotime($app['start_date'])) ?> - <?= date('M d, Y', strtotime($app['end_date'])) ?>
@@ -328,22 +415,23 @@ if (ob_get_level() > 0) {
     </div>
     
     <script>
-        function showTab(tabName) {
+        function showTab(ev, tabName) {
+            ev = ev || window.event;
+            var targetTab = document.getElementById(tabName + '-tab');
+            var buttons = document.querySelectorAll('.tab-container .tab-button');
+            if (!targetTab || !buttons.length) return;
             // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(tab => {
+            document.querySelectorAll('.tab-container .tab-content').forEach(function(tab) {
                 tab.classList.remove('active');
             });
-            
-            // Remove active class from all buttons
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
+            // Remove active from all buttons
+            buttons.forEach(function(btn) { btn.classList.remove('active'); });
             // Show selected tab
-            document.getElementById(tabName + '-tab').classList.add('active');
-            
-            // Add active class to clicked button
-            event.target.classList.add('active');
+            targetTab.classList.add('active');
+            // Active class on the button that was clicked (use currentTarget so it's the button, not the icon)
+            var btn = ev.currentTarget || ev.target;
+            while (btn && !btn.classList.contains('tab-button')) btn = btn.parentElement;
+            if (btn) btn.classList.add('active');
         }
     </script>
 </body>

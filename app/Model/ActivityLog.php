@@ -5,9 +5,19 @@ class ActivityLog
     /**
      * Log an activity in the system
      */
-    public static function log($conn, $activity_type, $description, $user_id, $related_id = null, $metadata = null)
+    public static function log($conn, $activity_type, $description, $user_id, $related_id = null, $metadata = null, $timestamp = null)
     {
         try {
+            // Use provided timestamp or current time (ensure timezone is set)
+            if (!defined('APP_TIMEZONE')) {
+                define('APP_TIMEZONE', 'Africa/Harare');
+            }
+            if (function_exists('date_default_timezone_set')) {
+                date_default_timezone_set(APP_TIMEZONE);
+            }
+            
+            $created_at = $timestamp ?: date('Y-m-d H:i:s');
+            
             $sql = "INSERT INTO activity_logs (
                 activity_type, 
                 description, 
@@ -15,7 +25,7 @@ class ActivityLog
                 related_id, 
                 metadata, 
                 created_at
-            ) VALUES (?, ?, ?, ?, ?, NOW())";
+            ) VALUES (?, ?, ?, ?, ?, ?)";
             
             $stmt = $conn->prepare($sql);
             $metadata_json = $metadata ? json_encode($metadata) : null;
@@ -25,7 +35,8 @@ class ActivityLog
                 $description,
                 $user_id,
                 $related_id,
-                $metadata_json
+                $metadata_json,
+                $created_at
             ]);
         } catch (PDOException $e) {
             error_log("Activity log error: " . $e->getMessage());
