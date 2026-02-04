@@ -1,9 +1,11 @@
 <?php
 session_start();
-if (file_exists("config.railway.php") && (getenv('MYSQL_URL') || getenv('MYSQL_PRIVATE_URL'))) {
-    require_once "config.railway.php";
-} elseif (file_exists("config.php")) {
+// Railway: config.php is gitignored so only config.railway.php exists
+// Local: config.php exists, use it
+if (file_exists("config.php")) {
     require_once "config.php";
+} elseif (file_exists("config.railway.php")) {
+    require_once "config.railway.php";
 } else {
     die("Config missing");
 }
