@@ -1,8 +1,15 @@
 <?php
 session_start();
-if (file_exists("config.railway.php")) { require_once "config.railway.php"; } elseif (file_exists("config.php")) { require_once "config.php"; } else { die("Config missing"); }
+if (file_exists("config.railway.php") && (getenv('MYSQL_URL') || getenv('MYSQL_PRIVATE_URL'))) {
+    require_once "config.railway.php";
+} elseif (file_exists("config.php")) {
+    require_once "config.php";
+} else {
+    die("Config missing");
+}
 if (!defined('BASE_URL')) {
-    require_once 'config.php';
+    if (file_exists('config.php')) require_once 'config.php';
+    else define('BASE_URL', '/');
 }
 
 // Ensure timezone is set to Harare for all operations
