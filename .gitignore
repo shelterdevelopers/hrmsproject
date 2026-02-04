@@ -1,6 +1,5 @@
-# Configuration files with passwords
+# Configuration files with passwords (local only)
 config.php
-DB_connection.php
 
 # Database files
 *.sql

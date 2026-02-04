@@ -2,7 +2,7 @@
 ob_start();
 session_start();
 if (isset($_POST['user_name']) && isset($_POST['password'])) {
-    include "../DB_connection.php";
+    require_once __DIR__ . '/../DB_connection.php';
     include "../app/Model/Attendance.php"; // Add this line
 
     function validate_input($data) {
