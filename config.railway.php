@@ -1,6 +1,6 @@
 <?php
-// Railway provides MYSQL_URL or MYSQL_PRIVATE_URL when DB is linked - parse it for credentials
-$mysql_url = getenv('MYSQL_PRIVATE_URL') ?: getenv('MYSQL_URL');
+// Railway provides MYSQL_URL or MYSQL_PRIVATE_URL - PHP getenv() often misses them, try $_SERVER too
+$mysql_url = $_SERVER['MYSQL_PRIVATE_URL'] ?? $_SERVER['MYSQL_URL'] ?? $_ENV['MYSQL_PRIVATE_URL'] ?? $_ENV['MYSQL_URL'] ?? getenv('MYSQL_PRIVATE_URL') ?: getenv('MYSQL_URL');
 if ($mysql_url) {
     $parsed = parse_url($mysql_url);
     $db_host = $parsed['host'] ?? 'localhost';
@@ -9,11 +9,12 @@ if ($mysql_url) {
     $db_pass = $parsed['pass'] ?? '';
     $db_name = isset($parsed['path']) ? ltrim($parsed['path'], '/') : 'railway';
 } else {
-    $db_host = getenv('MYSQLHOST') ?: 'trolley.proxy.rlwy.net';
-    $db_user = getenv('MYSQLUSER') ?: 'root';
-    $db_pass = getenv('MYSQLPASSWORD') ?: '';
-    $db_name = getenv('MYSQLDATABASE') ?: 'railway';
-    $db_port = (int)(getenv('MYSQLPORT') ?: 59231);
+    $e = fn($k, $d = '') => $_SERVER[$k] ?? $_ENV[$k] ?? getenv($k) ?: $d;
+    $db_host = $e('MYSQLHOST', 'trolley.proxy.rlwy.net');
+    $db_user = $e('MYSQLUSER', 'root');
+    $db_pass = $e('MYSQLPASSWORD', '');
+    $db_name = $e('MYSQLDATABASE', 'railway');
+    $db_port = (int)$e('MYSQLPORT', '59231');
 }
 
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
